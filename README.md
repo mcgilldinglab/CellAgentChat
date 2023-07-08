@@ -33,6 +33,7 @@ Inferring cell communication between different cell type populations and identif
     * scipy >= 1.9.1
     * seaborn >= 0.12.0
     * matplotlib >= 3.6.0
+    * pyslingshot >= 0.0.2 (https://github.com/mossjacob/pyslingshot)
 * R dependencies
     * tidyverse >= 2.0.0
     * ComplexHeatmap >= 2.14.0
@@ -43,7 +44,11 @@ Inferring cell communication between different cell type populations and identif
 
 ### Installing CellAgentChat
 
-You may install CellAgentChat and its dependencies by "pip install git+https://github.com/mcgilldinglab/RAMEN"
+You may install CellAgentChat and its dependencies by the following command:
+
+```
+pip3 install git+https://github.com/mcgilldinglab/CellAgentChat
+```
 
 ## Input Preparation
 
