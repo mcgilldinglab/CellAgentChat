@@ -22,10 +22,28 @@ Inferring cell communication between different cell type populations and identif
 
 ## Installation
 
-#### Pre-requisites
+### Prerequisites
 
+* Python >= 3.10
+* R >= 4.2.2
+* Python dependencies
+    * scanpy >= 1.9.1
+    * Mesa >= 1.0.0
+    * torch >= 1.12.1
+    * scipy >= 1.9.1
+    * seaborn >= 0.12.0
+    * matplotlib >= 3.6.0
+* R dependencies
+    * tidyverse >= 2.0.0
+    * ComplexHeatmap >= 2.14.0
+    * BiocManager >= 1.30.19
+    * reshape >= 0.8.9
+    * optparse >= 1.7.3
+    * utils >= 4.2.2
 
-#### Installation
+### Installing CellAgentChat
+
+You may install CellAgentChat and its dependencies by "pip install git+https://github.com/mcgilldinglab/RAMEN"
 
 ## Input Preparation
 
