@@ -19,3 +19,5 @@ Inferring cell communication between different cell type populations and identif
 5. Evaluating the impact of cell-cell interactions on downstream genes.
 6. Performing effective in-silico perturbations, such as manipulating receptor blockage, to identify target genes for novel therapeutic approaches.
 7. Inferring both short and long-range interactions between cells.
+
+## Input Preparation
