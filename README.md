@@ -21,3 +21,20 @@ Inferring cell communication between different cell type populations and identif
 7. Inferring both short and long-range interactions between cells.
 
 ## Input Preparation
+
+#### Gene Expression file (Mandatory)
+
+This is a cell X genes csv or text file. This file can contain the unnormalized counts (we provide a preprocessing function to normalize the counts) for each gene or normalized values. Note: the gene/protein ids must be the gene names. 
+
+#### Meta file (Mandatory)
+
+This is a two column csv or text file indicating the cell type/cluster name that each cell resides in. The first column should be the **cell** and the second column should be the **cell_type**. 
+
+#### Spatial Coordinates (Optional)
+
+This is a three column csv or text file that contains the spatial coordinates of each cell determined from spatial transcriptomics data. The first column should be the **cell** (matching those in **meta.txt**). The second and third columns should be the **x** and **y** coordinates, respectively. 
+
+#### Ligand-Receptor Database
+
+This is a three column csv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB. However, the user can opt to provide their own custom database. The first column contains the **lr_pair**, the second column contains the **ligand_gene_symbol** and the third column contains the **receptor_gene_symbol**. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+
