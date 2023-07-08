@@ -22,6 +22,10 @@ Inferring cell communication between different cell type populations and identif
 
 ## Input Preparation
 
+#### Ligand-Receptor Database (Mandatory)
+
+This is a three column csv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB. However, the user can opt to provide their own custom database. The first column contains the **lr_pair**, the second column contains the **ligand_gene_symbol** and the third column contains the **receptor_gene_symbol**. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+
 #### Gene Expression file (Mandatory)
 
 This is a cell X genes csv or text file. This file can contain the unnormalized counts (we provide a preprocessing function to normalize the counts) for each gene or normalized values. Note: the gene/protein ids must be the gene names. 
@@ -38,11 +42,7 @@ This is a three column csv or text file that contains the spatial coordinates of
 
 This is a three column csv or text file that contains the pseudotime values of each cell. The first column should be the **cell** (matching those in **meta.txt**) and the second column should be the pseudotime values of each cell. Alternatively, we provide the option to calculate the pseudotime values manually using Slingshot.
 
-#### Anndata object (.h5ad file) (Optional)
+#### Anndata object (h5ad file) Optional)
 
-The gene expression, cell type and spatial coordinates can also all be stored in an anndata input file. The gene expression should be stored in the data matrix **X**. The cell types and spatial coordinates (optional) and pseudotime (optional) should be stored in the observations under the column names **cell_type**, **x**, **y** and **pseudotime**, respectively. 
-
-#### Ligand-Receptor Database (Mandatory)
-
-This is a three column csv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB. However, the user can opt to provide their own custom database. The first column contains the **lr_pair**, the second column contains the **ligand_gene_symbol** and the third column contains the **receptor_gene_symbol**. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+The gene expression, cell type, spatial coordinates and pseudotime values can also all be stored in an anndata input file. The gene expression should be stored in the data matrix **X**. The cell types and spatial coordinates (optional) and pseudotime (optional) should be stored in the observations under the column names **cell_type**, **x**, **y** and **pseudotime**, respectively. 
 
