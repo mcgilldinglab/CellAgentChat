@@ -20,6 +20,13 @@ Inferring cell communication between different cell type populations and identif
 6. Performing effective in-silico perturbations, such as manipulating receptor blockage, to identify target genes for novel therapeutic approaches.
 7. Inferring both short and long-range interactions between cells.
 
+## Installation
+
+#### Pre-requisites
+
+
+#### Installation
+
 ## Input Preparation
 
 #### Ligand-Receptor Database (Mandatory)
