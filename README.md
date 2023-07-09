@@ -76,3 +76,5 @@ This is a three column csv or text file that contains the pseudotime values of e
 
 The gene expression, cell type, spatial coordinates and pseudotime values can also all be stored in an anndata input file. The gene expression should be stored in the data matrix ```X```. The cell types and spatial coordinates (optional) and pseudotime (optional) should be stored in the observations under the column names ```cell_type```, ```x```, ```y``` and ```pseudotime```, respectively. 
 
+## Run example
+
