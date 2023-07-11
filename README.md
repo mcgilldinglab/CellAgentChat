@@ -82,7 +82,7 @@ The gene expression, cell type, spatial coordinates and pseudotime values can al
 
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
 
-To access the tutorial on loading the server for our animation platform, please refer to the tutorial directory provided above.
+To access the tutorial on server setup for our animation platform, please consult part 4 of either of our tutorials, available with or without pseudotime.
 
 For a comprehensive tutorial on how to use our animation platform and effectively manipulate the available parameters, we highly recommend watching our tutorial video. It will provide you with a step-by-step guide on utilizing the platform to its fullest potential.
 
