@@ -78,6 +78,12 @@ The gene expression, cell type, spatial coordinates and pseudotime values can al
 
 ## Tutorials
 
+Please check the tutorial directory of the repository.
+
+* [Full tutorial for CellAgentChat analysis of a single dataset WITHOUT pseudotime with explanation of each function](https://github.com/mcgildinglab/CellAgentChat/tutorial/Tutorial.html)
+
+* Full tutorial for CellAgentChat analysis of a single dataset WITH pseudotime with explanation of each function
+
 ## Animation
 
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
