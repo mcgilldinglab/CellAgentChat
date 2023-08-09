@@ -58,15 +58,15 @@ This is a three column csv or text file that contaisn the ligand receptor pairs.
 
 #### Gene Expression file (Mandatory)
 
-This is a cell X genes csv or text file. This file can contain the unnormalized counts (we provide a preprocessing function to normalize the counts) for each gene or normalized values. Note: the gene/protein ids must be the gene names. 
+This is a cell X genes csv or text file. This file can contain the unnormalized counts (we provide a preprocessing function to normalize the counts) for each gene or normalized values (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/gene_expression.csv.zip)). Note: the gene/protein ids must be the gene names. 
 
 #### Meta file (Mandatory)
 
-This is a two column csv or text file indicating the cell type/cluster name that each cell resides in. The first column should be the ```cell``` and the second column should be the ```cell_type```. 
+This is a two column csv or text file indicating the cell type/cluster name that each cell resides in (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/meta.csv)). The first column should be the ```cell``` and the second column should be the ```cell_type```. 
 
 #### Spatial Coordinates file (Optional)
 
-This is a three column csv or text file that contains the spatial coordinates of each cell determined from spatial transcriptomics data. The first column should be the ```cell``` (matching those in ```meta.txt```). The second and third columns should be the ```x``` and ```y``` coordinates, respectively. 
+This is a three column csv or text file that contains the spatial coordinates of each cell determined from spatial transcriptomics data (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/spatial_coordinates.csv)). The first column should be the ```cell``` (matching those in ```meta.txt```). The second and third columns should be the ```x``` and ```y``` coordinates, respectively. 
 
 #### Pseudotime file (Optional)
 
