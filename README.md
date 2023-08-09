@@ -54,7 +54,7 @@ pip3 install git+https://github.com/mcgilldinglab/CellAgentChat
 
 #### Ligand-Receptor Database (Mandatory)
 
-This is a three column csv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB. However, the user can opt to provide their own custom database. The first column contains the ```lr_pair```, the second column contains the ```ligand_gene_symbol``` and the third column contains the ```receptor_gene_symbol```. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+This is a three column csv, tsv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB (see [here](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/human_lr_pair.tsv)). However, the user can opt to provide their own custom database. The first column contains the ```lr_pair```, the second column contains the ```ligand_gene_symbol``` and the third column contains the ```receptor_gene_symbol```. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
 
 #### Gene Expression file (Mandatory)
 
@@ -70,7 +70,7 @@ This is a three column csv or text file that contains the spatial coordinates of
 
 #### Pseudotime file (Optional)
 
-This is a three column csv or text file that contains the pseudotime values of each cell. The first column should be the ```cell``` (matching those in ```meta.txt```) and the second column should be the pseudotime values of each cell. Alternatively, we provide the option to calculate the pseudotime values manually using Slingshot.
+This is a two column csv or text file that contains the pseudotime values of each cell (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/pseudotime.csv)). The first column should be the ```cell``` (matching those in ```meta.txt```) and the second column should be the pseudotime values of each cell. Alternatively, we provide the option to calculate the pseudotime values manually using Slingshot.
 
 #### Anndata object (h5ad file) Optional)
 
