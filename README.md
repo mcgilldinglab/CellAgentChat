@@ -27,6 +27,8 @@ Inferring cell communication between different cell type populations and identif
 * Python >= 3.10
 * R >= 4.2.2
 * Python dependencies
+    * numpy >= 1.22.3
+    * pandas >= 1.5.0
     * scanpy >= 1.9.1
     * Mesa >= 1.0.0
     * torch >= 1.12.1
