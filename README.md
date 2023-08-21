@@ -86,6 +86,10 @@ Please check the tutorial directory of the repository.
 
 * [Full tutorial for CellAgentChat analysis of a single dataset WITH pseudotime with explanation of each function](https://htmlpreview.github.io/?https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_Pseudotime.html)
 
+* [Brief tutorial for CellAgentChat analysis of receptor blocking perturbation analysis](https://htmlpreview.github.io/?https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_Pseudotime.html)
+
+* [Brief tutorial for CellAgentChat analysis and visualization of interactions of individual cells](https://htmlpreview.github.io/?https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_Pseudotime.html)
+
 ## Animation
 
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
