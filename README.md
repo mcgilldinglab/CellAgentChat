@@ -9,8 +9,11 @@ The initial step in our approach involves the estimation of the receptor receivi
 We quantify the interaction between a specific LR pair from sender and receiver cell agents using LR scores, which depend on the above rates. The LR score for two cluster pairs is the Interaction Score (IS). We consider an IS for an LR pair significant if its IS score significantly surpasses the background score derived from a permutation test. The cumulative interaction between two cell clusters is computed as the total number of significant LR pairs. CellAgentChat also computes the cell receiving score (CRS) to measure the received interactions for each individual cell.
 
 The ABM framework further allows us to adjust the agent behavior rules, facilitating the exploration of long and short-range cellular interactions analyzing the effects of in-silico receptor blocking and studying the temporal dynamics of genes through dynamic simulations. This approach also supports the agent-based animation and visualization of cellular interactions associated with individual cells within the biological system, enhancing the interpretability and visualization of the modeling outcomes.
+[Figure 1-cropped.pdf](https://github.com/mcgilldinglab/CellAgentChat/files/15152541/Figure.1-cropped.pdf)
 
 <img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/assets/77021753/5301e340-202b-4320-bf94-f46122ee8a07">
+
+<img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/files/15152541/Figure.1-cropped.pdf">
 
 ## Key Capabilities
 
