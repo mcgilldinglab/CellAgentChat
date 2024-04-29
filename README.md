@@ -12,7 +12,7 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 
 <img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/assets/77021753/5301e340-202b-4320-bf94-f46122ee8a07">
 
-<img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/files/15152541/Figure.1-cropped.pdf">
+<img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/blob/main/Figure%201-cropped.pdf">
 
 ## Key Capabilities
 
