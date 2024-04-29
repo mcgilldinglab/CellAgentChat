@@ -12,8 +12,6 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 
 <img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/assets/77021753/5301e340-202b-4320-bf94-f46122ee8a07">
 
-<img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/blob/main/Figure%201-cropped.pdf">
-
 ## Key Capabilities
 
 1. Estimating cell-cell interactions by utilizing spatial coordinates derived from spatial transcriptomics data.
