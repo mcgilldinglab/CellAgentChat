@@ -10,7 +10,7 @@ We quantify the interaction between a specific LR pair from sender and receiver 
 
 The ABM framework further allows us to adjust the agent behavior rules, facilitating the exploration of long and short-range cellular interactions analyzing the effects of in-silico receptor blocking and studying the temporal dynamics of genes through dynamic simulations. This approach also supports the agent-based animation and visualization of cellular interactions associated with individual cells within the biological system, enhancing the interpretability and visualization of the modeling outcomes.
 
-<img width="1000" alt="image" src="https://github.com/mcgilldinglab/CellAgentChat/assets/77021753/5301e340-202b-4320-bf94-f46122ee8a07">
+![Figure1](https://github.com/mcgilldinglab/CellAgentChat/assets/77021753/bc426d53-6aa7-4646-82f0-292c68b32b2a)
 
 ## Key Capabilities
 
