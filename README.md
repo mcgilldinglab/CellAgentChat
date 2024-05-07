@@ -45,7 +45,6 @@ You may install CellAgentChat and its dependencies by the following command:
 git clone https://github.com/mcgilldinglab/CellAgentChat.git
 cd CellAgentChat
 pip3 install -r requirements.txt 
-python setup.py install
 ```
 
 ## Input Preparation
