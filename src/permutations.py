@@ -60,7 +60,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
         for key in fin.keys():
             val += len(fin[key])
         avg = val/len(fin.keys())
-        print(avg)
+        print("Average LR score" + str(avg))
         i += 1
     return fin, model2, distance
 
