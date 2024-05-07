@@ -25,7 +25,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
     distance = 1
     if dist:
         model3 = CellModel(N, adata, lig_uni, rec_uni, rates, dist=True, delta=1, max_steps=1,
-                    tau=tau, noise=noise, rec_block=rec_block, permutations=True)
+                    tau=tau, rec_block=rec_block, permutations=True)
         distance = model3.calc_dist()
     
     fin = {}
@@ -38,7 +38,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
         np.random.shuffle(x)
         bdata.obs['cell_type'] = x
         model2 = CellModel(N, bdata, lig_uni, rec_uni, rates, dist=False, tau=tau,  max_steps=1,
-                           noise=noise, rec_block=rec_block, permutations=True)
+                           rec_block=rec_block, permutations=True)
         for _ in range(1):
             model2.step()
             
@@ -60,6 +60,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
         for key in fin.keys():
             val += len(fin[key])
         avg = val/len(fin.keys())
+        print(avg)
         i += 1
     return fin, model2, distance
 
@@ -100,7 +101,8 @@ def permutation_test_pseudotime(threshold, N, adata, lig_uni, rec_uni, rates, bi
         val = 0
         for key in fin.keys():
             val += len(fin[key])
-        avg = val/len(fin.keys())   
+        avg = val/len(fin.keys())
+        print("Average Number of LR Pair Scores: "+ str(avg))
         i += 1       
     return fin, model2, distance
 

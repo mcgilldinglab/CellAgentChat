@@ -16,12 +16,13 @@ from bckground_distribution import *
 
 
 def CCI(N, adata, lig_uni, rec_uni, rates, distribution, clusters, dist, delta=1, max_steps=1,
-        tau=2, noise=5, rec_block=False, plot_every_step=True, path='out', interaction_matrix='interaction_matrix.csv',
+        tau=2, rec_block=False, plot_every_step=True, path='out', interaction_matrix='interaction_matrix.csv',
         sig_lr_pair='sig_lr_pairs.csv', pvalues_name='pvalues.csv', pvalues2_name='pvalues2.csv',
-        cluster_names='cluster_names.csv', threshold=0.05):
+        cluster_names='cluster_names.csv', threshold=0.05, net=None):
      
-    model = CellModel(N, adata, lig_uni, rec_uni, rates, max_steps, dist, delta,
-                    tau, noise, rec_block)
+    model = CellModel(N=N, adata=adata, lig_uni=lig_uni, rec_uni=rec_uni, rates=rates,
+                      max_steps=max_steps, dist=dist, delta=delta, tau=tau,
+                      rec_block=rec_block, net=net)
     print("Calculating Interactions")
     for i in range(max_steps):
         print("Step: " +str(i))

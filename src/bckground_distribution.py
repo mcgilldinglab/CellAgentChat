@@ -19,9 +19,11 @@ def get_distribution(fin, dist=0, scaled=False, pseudotime=False):
         if not pseudotime:
             alpha, loc, scale = gamma.fit(alist, floc=0)
             if scaled and dist > 0:
-                fin3[key] = (alpha/2, 0, (scale/dist)/2)
+                #fin3[key] = (alpha/2, 0, (scale/dist)/2)
+                fin3[key] = ((alpha*0.98)/2, 0, ((scale*1.2)/dist)/2)
             else:
-                fin3[key] = (alpha, 0, scale)
+                #fin3[key] = (alpha, 0, scale)
+                fin3[key] = (alpha*0.98, 0, scale*1.2)
         else:
             #Pseudotime
             alpha, loc, scale = gamma.fit(alist, floc=min(alist)-0.00000001)
@@ -86,7 +88,7 @@ def get_significant_lr_pairs(lr1, fin, cutoff=0.05):
         for key in d1:
             if key in out:
                 continue
-            if corr[0][i] == True:
+            if corr[0][i]:
                 d2[key] = d1[key]
                 d3[key] = corr[1][i]
                 sig += 1
