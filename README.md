@@ -67,7 +67,7 @@ This is a cell X genes csv or text file. This file can contain the unnormalized 
 
 #### Meta file (Mandatory)
 
-This is a two column csv or text file indicating the cell type/cluster name that each cell resides in (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/meta.csv)). The first column should be the ```cell``` and the second column should be the ```cell_type```. 
+This is a three column csv or text file indicating the cell type/cluster name and batch of each cell (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/meta.csv)). The first column should be the ```cell```, the second column should be the ```cell_type``` and the third column should be the ```Batch```. 
 
 #### Spatial Coordinates file (Optional)
 
