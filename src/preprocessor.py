@@ -14,9 +14,12 @@ def create_anndata(gene_expression, meta, x_umap = None, coordinates = None, pse
         X = scipy.sparse.csr_matrix(gene_expression.values, dtype='float32'),
       obs = pd.DataFrame(index = obs),
       var = pd.DataFrame(index = var))
-    cell_types = list(meta['cell_type'])
     #cell types
+    cell_types = list(meta['cell_type'])
     adata.obs['cell_type'] = cell_types
+    #Batch
+    batch = list(meta['Batch']
+    adata.obs['Batch'] = batch
     
     #spatial coordinates
     if isinstance(coordinates, pd.DataFrame):
