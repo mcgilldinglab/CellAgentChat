@@ -20,7 +20,7 @@ def copy(adata):
 
 
 def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
-                     dist=False, tau=2, noise=5, rec_block=False):
+                     dist=False, tau=2, rec_block=False):
     #Get average distance
     distance = 1
     if dist:
