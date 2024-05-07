@@ -29,16 +29,6 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 
 * Python >= 3.10
 * R >= 4.2.2
-* Python dependencies
-    * numpy >= 1.22.3
-    * pandas >= 1.5.0
-    * scanpy >= 1.9.1
-    * Mesa >= 1.0.0
-    * torch >= 1.12.1
-    * scipy >= 1.9.1
-    * seaborn >= 0.12.0
-    * matplotlib >= 3.6.0
-    * pyslingshot >= 0.0.2 (https://github.com/mossjacob/pyslingshot)
 * R dependencies
     * tidyverse >= 2.0.0
     * ComplexHeatmap >= 2.14.0
@@ -52,7 +42,10 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 You may install CellAgentChat and its dependencies by the following command:
 
 ```
-pip3 install git+https://github.com/mcgilldinglab/CellAgentChat
+git clone https://github.com/mcgilldinglab/CellAgentChat.git
+cd CellAgentChat
+pip3 install -r requirements.txt 
+python setup.py install
 ```
 
 ## Input Preparation
