@@ -85,7 +85,7 @@ The gene expression, cell type, spatial coordinates and pseudotime values can al
 
 Please check the tutorial directory of the repository.
 
-* [Full tutorial for CellAgentChat analysis of a single dataset WITHOUT pseudotime with explanation of each function and all additional features](https://htmlpreview.github.io/?https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial.ipynb)
+* [Full tutorial for CellAgentChat analysis of a single dataset WITHOUT pseudotime with explanation of each function and all additional features](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial.ipynb)
 
 * Full tutorial for CellAgentChat analysis of a single dataset WITH pseudotime coming soon
 
@@ -93,8 +93,8 @@ Please check the tutorial directory of the repository.
 
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
 
-To access the tutorial on server setup for our animation platform, please consult part 4 of either of our tutorials, available with or without pseudotime.
+To access the tutorial on server setup for our animation platform, please consult part 6 of either of the tutorial, available with or without pseudotime.
 
-For a comprehensive tutorial on how to use our animation platform and effectively manipulate the available parameters, we highly recommend watching our tutorial video. It will provide you with a step-by-step guide on utilizing the platform to its fullest potential.
+## Contact
 
-Tutorial Video: 
+[Vishvak Raghavan](mailto:vishvak.raghavan@mail.mcgill.ca), [Yue Li](mailto:yueli@cs.mcgill.ca), [Jun Ding](mailto:jun.ding@mcgill.ca)
