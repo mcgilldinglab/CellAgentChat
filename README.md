@@ -5,7 +5,6 @@ CellAgentChat constitutes a comprehensive framework integrating gene expression 
 
 The initial step in our approach involves the estimation of the receptor receiving rate (α<sup>r</sup>), which signifies the fraction of secreted ligands received by the receptor on the receiver cell. We then leverage a neural network to evaluate the receptor conversion rate (β<sup>r</sup>), which measures the potency of a cellular interaction by studying its effect on downstream gene expression dynamics. Considering the possibility that a similar interaction strength between ligand-receptor pairs can yield diverse impacts on downstream gene expression dynamics, it becomes crucial to assess the conversion rate for each receptor. Next, our approach involves the computation of the ligand diffusion rate (γ<sup>l</sup> = _x_<sup>l</sup>/_d_<sup>τ×δ</sup>), which quantifies the ligands secreted by the sender cell that reach the target receiver cell. This rate is a function of both ligand expression, _x_<sup>l</sup> and intercellular distance, _d_. The ligand diffusion rate also governed by two parameters: τ and δ. τ represents the degrees of spatial freedom concerning the single-cell data, typically set to two for spatial transcriptomics data that is derived from two-dimensional slices. δ signifies the decay rate of ligand diffusion which prioritizes interactions over long or short distances. When δ is lower than 1, it weakens the decay rate, giving precedence to long-range interactions. Conversely, when δ exceeds 1, it amplifies the decay rate, favoring short-range interactions. A δ = 1 (default) equally prioritizes long and short-range interactions (no preference). 
 
-
 We quantify the interaction between a specific LR pair from sender and receiver cell agents using LR scores, which depend on the above rates. The LR score for two cluster pairs is the Interaction Score (IS). We consider an IS for an LR pair significant if its IS score significantly surpasses the background score derived from a permutation test. The cumulative interaction between two cell clusters is computed as the total number of significant LR pairs. CellAgentChat also computes the cell receiving score (CRS) to measure the received interactions for each individual cell.
 
 The ABM framework further allows us to adjust the agent behavior rules, facilitating the exploration of long and short-range cellular interactions analyzing the effects of in-silico receptor blocking and studying the temporal dynamics of genes through dynamic simulations. This approach also supports the agent-based animation and visualization of cellular interactions associated with individual cells within the biological system, enhancing the interpretability and visualization of the modeling outcomes.
@@ -16,13 +15,13 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 
 1. Estimating cell-cell interactions by utilizing spatial coordinates derived from spatial transcriptomics data.
 2. Determining cell-cell interactions by analyzing the pseudotime trajectory of cells.
-Inferring cell communication between different cell type populations and identifying relevant ligand-receptor pairs.
-3. Assessing the receiving strength of individual cells through the utilization of our animation platform and agent-based modeling techniques.
-4. Efficiently tracking specific ligand-receptor pairs, cells or cell types of interest on our animation platform for detailed analysis.
-5. Evaluating the impact of cell-cell interactions on downstream genes.
-6. Performing effective in-silico perturbations, such as manipulating receptor blockage, to identify target genes for novel therapeutic approaches.
-7. Inferring both short and long-range interactions between cells.
-8. Analyze the ipact of cell-cell interactions on cell states over short time duration through dynamic ABM simulations. 
+3. Inferring cell communication between different cell type populations and identifying relevant ligand-receptor pairs.
+4. Assessing the receiving strength of individual cells through the utilization of our animation platform and agent-based modeling techniques.
+5. Efficiently tracking specific ligand-receptor pairs, cells or cell types of interest on our animation platform for detailed analysis.
+6. Evaluating the impact of cell-cell interactions on downstream genes.
+7. Performing effective in-silico perturbations, such as manipulating receptor blockage, to identify target genes for novel therapeutic approaches.
+8. Inferring both short and long-range interactions between cells.
+9. Analyze the impact of cell-cell interactions on cell states over short time duration through dynamic ABM simulations. 
 
 ## Installation
 
@@ -60,7 +59,7 @@ pip3 install git+https://github.com/mcgilldinglab/CellAgentChat
 
 #### Ligand-Receptor Database (Mandatory)
 
-This is a three column csv, tsv or text file that contaisn the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB (see [here](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/human_lr_pair.tsv)). However, the user can opt to provide their own custom database. The first column contains the ```lr_pair```, the second column contains the ```ligand_gene_symbol``` and the third column contains the ```receptor_gene_symbol```. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+This is a three column csv, tsv or text file that contains the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB (see human database [here](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/human_lr_pair.tsv)). However, the user can opt to provide their own custom database. The first column contains the ```lr_pair```, the second column contains the ```ligand_gene_symbol``` and the third column contains the ```receptor_gene_symbol```. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
 
 #### Gene Expression file (Mandatory)
 
