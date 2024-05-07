@@ -18,10 +18,10 @@ from bckground_distribution import *
 def CCI_pseudotime(N, adata, lig_uni, rec_uni, rates, distribution, clusters, dist=False, bins = 10, delta=1, shift = 0,
         tau=2, noise=5, rec_block=False, path='out', interaction_matrix='interaction_matrix.csv',
         sig_lr_pair='sig_lr_pairs.csv', pvalues_name='pvalues.csv', pvalues2_name='pvalues2.csv',
-        cluster_names='cluster_names.csv', threshold=0.05):
+        cluster_names='cluster_names.csv', threshold=0.05, net=None):
     
-    model = CellModel2(N, adata, lig_uni, rec_uni, rates, bins, dist, delta, shift,
-                    tau, noise, rec_block)
+    model = CellModel2(N=N, adata=adata, lig_uni=lig_uni, rec_uni=rec_uni, rates=rates, bins=bins, dist=dist,
+                       delta=delta, shift=shift, tau=tau, noise=noise, rec_block=rec_block, net=net)
     print("Calculating Interactions")
     for i in range(bins):
         

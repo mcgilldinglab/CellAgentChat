@@ -18,6 +18,59 @@ import model_setup
 from model_setup import *
 
 
+def check_threshold(tensor1, tensor2, threshold):
+    # Calculate the absolute difference between the two tensors
+    diff1 = tensor1 - tensor2
+    diff2 = tensor2 - tensor1
+    
+    # Check if each element difference is greater/less than the threshold
+    greater_than_threshold = torch.greater(diff1, threshold)
+    less_than_threshold = torch.greater(diff2, threshold)
+    
+    return greater_than_threshold, less_than_threshold
+
+
+
+
+def gene_exp_preds(model_path, lig_uni, rec_uni, inputs, all_genes, threshold = 0.5, update=0.01):
+    model = torch.load(model_path)
+    
+    #l = list(rec_uni.keys())+list(lig_uni.keys())
+    #inputs2 = np.array(adata[:, l].X)
+    #output
+    #all_genes2 =np.array(adata.X)
+    #print(all_genes2)
+    
+    dataset2 = ExpDataset(inputs, all_genes)
+    dataloader2 = DataLoader(dataset=dataset2,shuffle=False,batch_size=len(all_genes))
+    
+    for i,(x_train,y_train) in enumerate(dataloader2):
+        #print(y_train)
+        y_pred = model(x_train)
+        #print(y_pred)
+        for i, cell1 in enumerate(y_pred):
+            #print(i)
+            t1 = y_train[i]
+
+            greater_than_threshold, less_than_threshold = check_threshold(t1, cell1, threshold)
+
+            #Increase expression
+            indices = torch.where(greater_than_threshold)
+            #print(len(indices[0]))
+            #print("")
+            for index in indices:
+                #print(index)
+                all_genes[i][index] += update
+
+            #decrease expression
+            indices2 = torch.where(less_than_threshold)
+            for index in indices2:
+                all_genes[i][index] -= update
+                
+    all_genes = np.clip(all_genes, 0, None)
+            
+    return all_genes
+
 
 def get_protein_choices(rec_uni):
     #proteins
@@ -88,8 +141,6 @@ def parameters(adata, lig_uni, rec_uni, rates, clusters, pairs, proteins):
         'Sender', value=clusters[0], choices= clusters),
     'receiver': Choice(
         'Receiver', value=clusters[0], choices= clusters),
-    'noise': Slider(
-        'Gaussian Noise Percentage', 5, 0, 50, 1),
     }
     return model_params
 
@@ -134,7 +185,7 @@ def get_avg_dist(model):
 
 class CellAgent2(Agent):
 
-    def __init__(self, unique_id, model, clust, exp, ptime):
+    def __init__(self, unique_id, model, clust, exp, ptime, batch):
         super().__init__(unique_id, model)
         #Whether the cell is stationary or can move
         self.cluster = clust
@@ -142,6 +193,7 @@ class CellAgent2(Agent):
         #Visualization Tracking Fields
         self.num_r = 0
         self.ptime = ptime
+        self.slice = batch
         self.iqr = "very_low"
         self.bin = None
         
@@ -158,6 +210,12 @@ class CellAgent2(Agent):
         if len(rec_list) != 0:
             #Receptor cdf - Receiving Rate
             unzipped_rec = list(zip(*rec_list))
+            rr = np.array(unzipped_rec[1])/np.max(np.array(unzipped_rec[1]))
+            if rr.min() < 0.3:
+                rr = (np.array(unzipped_rec[1])/np.max(np.array(unzipped_rec[1]))*0.7)+0.3
+            for i, val in enumerate(unzipped_rec[0]):
+                rates2[val] = self.model.rates[val] * rr[i]
+            """
             mean = np.average(unzipped_rec[1])
             std_dev = np.std(unzipped_rec[1])
             for i, val in enumerate(unzipped_rec[1]):
@@ -165,7 +223,7 @@ class CellAgent2(Agent):
                 if std_dev != 0:
                     rates2[unzipped_rec[0][i]] = self.model.rates[unzipped_rec[0][i]] * norm.cdf(val, loc=mean, scale=std_dev)
                 else:
-                    rates2[unzipped_rec[0][i]] = self.model.rates[unzipped_rec[0][i]]
+                    rates2[unzipped_rec[0][i]] = self.model.rates[unzipped_rec[0][i]]"""
         clust1 = self.cluster
         #Ligand receptor interactions
         
@@ -202,7 +260,12 @@ class CellAgent2(Agent):
                         exp = lig_exp[lig]
                         #Calculate ligand score
                         if self.model.dist_param != 0:
-                            lig_score = np.multiply(exp, dist2).sum() / len(exp)
+                            if self.model.delta != 1:
+                                lig_delta = self.model.delta[lig]
+                            else:
+                                lig_delta = self.model.delta
+                            new_dist2 = [1/(d**(self.model.dist_param*lig_delta))for d in dist2]
+                            lig_score = np.multiply(exp, new_dist2).sum() / len(exp)  
                         else:
                             lig_score = exp
 
@@ -276,8 +339,8 @@ class CellModel2(Model):
     
     
     def __init__(self, N, adata, lig_uni, rec_uni, rates, bins, dist, delta=1, shift=0, tau = 2,
-                 noise=5, rec_block=False, protein_choice=False, lr_choice=False,sender=False,receiver=False,
-                 permutations=False):
+                 rec_block=False, protein_choice=False, lr_choice=False,sender=False,receiver=False,
+                 permutations=False, net = None):
         #Mandatory Inputs
         self.num_agents = N
         self.adata = adata
@@ -307,6 +370,11 @@ class CellModel2(Model):
         
         #For Permutations
         self.permutations = permutations
+        
+        #Neural Network model
+        self.net = net
+        self.all_genes = None
+        
         #avg distance
         self.avg_dist = 0
         
@@ -345,23 +413,38 @@ class CellModel2(Model):
         cts = list(set(adata.obs['cell_type']))
         for i, clust in enumerate(cts):
             self.tokenizer[clust] = i
+            
+            
+        #all gene expression of all cells
+        if scipy.sparse.issparse(adata.X):
+            self.all_genes = adata.X.toarray()
+        else:
+            self.all_genes = np.array(adata.X)
+        
     
         # Create agents
         for i in range(self.num_agents):
                 
             #Cluster
             clust = str(adata.obs.loc[adata.obs_names[i], 'cell_type'])
+            
+            batch = str(adata.obs.loc[adata.obs_names[i], 'Batch'])
         
-           
+               
             #gene expression
-            val = self.adata[adata.obs_names[i], self.genes].X.toarray()
+            #gene expression
+            if scipy.sparse.issparse(adata.X):
+                val = self.adata[adata.obs_names[i], self.genes].X.toarray()
+                
+            else:
+                val = self.adata[adata.obs_names[i], self.genes].X
             val = list(val[0])
             exp = dict(zip(self.genes, val))
             
             #pseudotime
             ptime = adata.obs.loc[adata.obs_names[i], 'pseudotime']
                     
-            a = CellAgent2(i, self, clust, exp, ptime)
+            a = CellAgent2(i, self, clust, exp, ptime, batch)
             self.schedule.add(a)
             
             #coordinates
@@ -385,8 +468,9 @@ class CellModel2(Model):
             
     #Function to modify database     
     def modify_db(self):
-        rec = self.rec_block
-        self.rates[rec] = 0
+        if self.rec_block == False:
+            for rec in self.rec_block:
+                self.rates[rec] = 0
      
     
     def get_clusters(self):
@@ -483,11 +567,14 @@ class CellModel2(Model):
             for clust in bc.keys():
                 cells = bc[clust]
                 distances = []
-                for cell2 in cells: 
-                    d = math.sqrt((cell.pos[0]-cell2.pos[0])**2 + (cell.pos[1]-cell2.pos[1])**2)**(self.dist_param*self.delta)
-                    if d == 0:
-                        d = 1
-                    d = 1/d
+                for cell2 in cells:
+                    if cell.slice == cell2.slice:
+                        d = math.sqrt((cell.pos[0]-cell2.pos[0])**2 + (cell.pos[1]-cell2.pos[1])**2)#**(self.dist_param*self.delta)
+                        if d == 0:
+                            d = 1
+                    else:
+                        d = 0
+                    #d = 1/d
                     distances.append(d)
                 adict[clust] = distances
             new_dict[cell] = adict
@@ -510,9 +597,7 @@ class CellModel2(Model):
                 for lig in self.lig_uni.keys():
                     expl = []
                     for cell in cells:
-                        #Gaussian Noise
-                        std = cell.expression[lig]*1000 * (self.noise/100)
-                        exp = np.random.normal(cell.expression[lig]*1000,std)
+                        exp = cell.expression[lig]
                         expl.append(exp)
                     if self.dist_param == 0:
                         expl = sum(expl) / len(expl)
@@ -602,12 +687,33 @@ class CellModel2(Model):
         
         self.output = {}
         self.output2 = {}
-        self.curr_step += 1      
+        self.curr_step += 1
+        
+        #dynamic gene expression update
+        if self.max_steps != 1:
+            #get lig rec input for NN
+            recc = [i for i, gene in enumerate(self.adata.var_names) if gene in self.rec_uni.keys()]
+            ligg = [i for i, gene in enumerate(self.adata.var_names) if gene in self.lig_uni.keys()]
+            input_recs = self.all_genes[:, recc]
+            input_ligs = self.all_genes[:, ligg]
+            lig_averages = np.mean(input_ligs, axis=0)
+            reshaped_averages = lig_averages.reshape(1, -1)
+            repeated_averages = np.repeat(reshaped_averages, input_recs.shape[0], axis=0)
+            inputs = np.concatenate((input_recs, repeated_averages), axis=1)
+            self.all_genes = gene_exp_preds(self.net, self.lig_uni, self.rec_uni, inputs, self.all_genes, threshold = 0.5, update=0.01)
+            
+            #update lig, rec expression for each cell
+            genes_ind = [i for i, gene in enumerate(self.adata.var_names) if gene in self.rec_uni.keys() or 
+                     gene in self.lig_uni.keys()]
+            for i, cell in enumerate(self.schedule.agents):
+                val = self.all_genes[i, genes_ind]
+                val = list(val)
+                exp = dict(zip(self.genes, val))
+                cell.expression = exp
+        
         if self.max_steps == self.curr_step:
             if self.rec_block != False:
-                block_list = []
-                block_list.append(self.rec_block)
-                block_receptors(self.adata, block_list, self.rec_uni)
+                block_receptors(self.adata, self.rec_block, self.rec_uni, self.lig_uni, self.net)
             self.running = False
 
 
