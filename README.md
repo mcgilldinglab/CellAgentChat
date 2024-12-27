@@ -79,7 +79,7 @@ Please check the tutorial directory of the repository.
 
 * [Full tutorial for CellAgentChat analysis of a single dataset WITHOUT pseudotime with explanation of each function and all additional features](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial.ipynb)
 
-* Full tutorial for CellAgentChat analysis of a single dataset WITH pseudotime coming soon
+* [CellAgentChat analysis after gene expression imputation using MAGIC](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_imputation.ipynb)
 
 ## Animation
 
