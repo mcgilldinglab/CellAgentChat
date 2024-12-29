@@ -81,6 +81,8 @@ Please check the tutorial directory of the repository.
 
 * [CellAgentChat analysis after gene expression imputation using MAGIC](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_imputation.ipynb)
 
+* [CellAgentChat analysis after spot deconvolution using SpatialScope](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_spot_deconvolution.ipynb)
+
 ## Animation
 
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
