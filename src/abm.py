@@ -14,6 +14,7 @@ import random
 import scipy.stats
 from scipy.stats import norm, gamma
 from itertools import combinations
+from sklearn.preprocessing import MinMaxScaler
 import model_setup
 from model_setup import *
 
@@ -39,27 +40,23 @@ def gene_exp_preds(model_path, lig_uni, rec_uni, inputs, all_genes, threshold = 
     #inputs2 = np.array(adata[:, l].X)
     #output
     #all_genes2 =np.array(adata.X)
-    #print(all_genes2)
     
     dataset2 = ExpDataset(inputs, all_genes)
     dataloader2 = DataLoader(dataset=dataset2,shuffle=False,batch_size=len(all_genes))
     
     for i,(x_train,y_train) in enumerate(dataloader2):
-        #print(y_train)
         y_pred = model(x_train)
         #print(y_pred)
         for i, cell1 in enumerate(y_pred):
-            #print(i)
+
             t1 = y_train[i]
 
             greater_than_threshold, less_than_threshold = check_threshold(t1, cell1, threshold)
 
             #Increase expression
             indices = torch.where(greater_than_threshold)
-            #print(len(indices[0]))
-            #print("")
+            
             for index in indices:
-                #print(index)
                 all_genes[i][index] += update
 
             #decrease expression
@@ -171,6 +168,7 @@ class CellAgent(Agent):
     def __init__(self, unique_id, model, clust, exp, batch):
         super().__init__(unique_id, model)
         #Whether the cell is stationary or can move
+        self.id = unique_id
         self.mobile = True
         self.cluster = clust
         self.expression = exp
@@ -354,16 +352,14 @@ class CellModel(Model):
         
         #create grid
         if self.dist_on:
-            self.grid = MultiGrid(75,55, True) 
+            self.grid = MultiGrid(101,101, True) 
         else:
-            self.grid = MultiGrid(75,55, True)
+            self.grid = MultiGrid(101,101, True)
     
         #tokenizer
         cts = list(set(adata.obs['cell_type']))
         for i, clust in enumerate(cts):
             self.tokenizer[str(clust)] = i
-        #self.tokenizer = {'Tumor': 0, 'Stromal Normal': 1, 'T cell': 2, 'Adipocytes': 3, 'TRAC+ Cells': 4, 'Plasma Cells': 5, 'B Cells': 6, 'Plasmacytoid Dendritic': 7, 'Tumor Associated Stromal': 8, 'Endothelial': 9, 'Myoepithelial': 10, 'Epithelial': 11, 'Macrophage': 12, 'Transitional Cells': 13, 'Mast Cells': 14}
-        #print(self.tokenizer)
             
         #all gene expression of all cells
         if scipy.sparse.issparse(adata.X):
@@ -412,7 +408,7 @@ class CellModel(Model):
             
     #Function to modify database      
     def modify_db(self):
-        if self.rec_block == False:
+        if self.rec_block != False:
             for rec in self.rec_block:
                 self.rates[rec] = 0
      
@@ -442,9 +438,46 @@ class CellModel(Model):
                 adict[clust] = distances
             new_dict[cell] = adict
         return new_dict
+
     
-    
-    
+    def get_normalized_dist(self):
+        # Get clusters
+        clusters = self.get_clusters()
+        # Extract agent IDs and slices
+        cell_ids = [cell.id for cell in self.schedule.agents]
+        slices = np.array([cell.slice for cell in self.schedule.agents])
+        # Extract coordinates for all agents
+        coords = self.adata.obs.loc[self.adata.obs_names[cell_ids], ["x_true", "y_true"]].to_numpy()
+        # Compute pairwise Euclidean distances using broadcasting
+        x1, x2 = np.meshgrid(coords[:, 0], coords[:, 0])
+        y1, y2 = np.meshgrid(coords[:, 1], coords[:, 1])
+        distances = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+ 
+        # Prevent zero distances (avoid divide-by-zero issues)
+        np.fill_diagonal(distances, 1)
+        # Apply slice condition
+        slice_mask = slices[:, None] == slices[None, :]
+        distances = distances * slice_mask
+        # Normalize distances
+        min_d, max_d = distances[distances > 0].min(), distances.max()
+        if max_d - min_d > 0:
+            distances = ((distances - min_d) / (max_d - min_d)) * 100
+        else:
+            distances.fill(0)  # Avoid divide-by-zero issues
+        # Convert to DataFrame for lookup
+        distance_df = pd.DataFrame(distances, index=cell_ids, columns=cell_ids)
+        # Build new_dict
+        new_dict = {}
+        for cell in self.schedule.agents:
+            cell_id = cell.id
+            adict = {}
+            for clust, cells in clusters.items():
+                cell2_ids = [c.id for c in cells]
+                adict[clust] = distance_df.loc[cell_id, cell2_ids].tolist()
+            new_dict[cell] = adict
+            new_dict[cell] = adict
+        return new_dict
+        
     
     def calc_ligands(self):
         #{cluster:{lig_name:[exp1,...,expn]}}
@@ -478,15 +511,26 @@ class CellModel(Model):
         distances2 = [self.dist(p1, p2) for p1, p2 in combinations(points, 2)]
         avg_distance = sum(distances2) / len(distances2)
         return avg_distance
-    
+
+    def calc_normalized_dist(self):
+        # Extract spatial coordinates of all agents
+        points = np.array([[self.adata.obs.loc[self.adata.obs_names[i], "x_true"], self.adata.obs.loc[self.adata.obs_names[i], "y_true"]] for i in range(self.num_agents)])
+        # Compute pairwise distances using raw coordinates
+        distances2 = np.array([self.dist(p1, p2) for p1, p2 in combinations(points, 2)])
+        # Normalize distances to range [0, 100]
+        scaler = MinMaxScaler(feature_range=(0, 100))
+        distances2_normalized = scaler.fit_transform(distances2.reshape(-1, 1)).flatten()
+        # Compute and return the average of the normalized distances
+        avg_distance = np.mean(distances2_normalized)
+        return avg_distance
         
 
     def step(self):
         """Advance the model by one step."""
         self.rec_score = []
         if self.dist_param != 0 and self.curr_step == 0:
-            self.avg_dist = self.calc_dist()
-            self.distances = self.get_dist()
+            self.avg_dist = self.calc_normalized_dist()
+            self.distances = self.get_normalized_dist()
             print("Average Distance: "+str(self.avg_dist))
         self.ligs = self.calc_ligands()
         self.modify_db()
@@ -508,7 +552,6 @@ class CellModel(Model):
                 val = sum(cdict[lr]) / num
                 #for multiple steps
                 if self.curr_step != 0:
-                    #print('hi')
                     prev = self.output4[cpair][lr]
                     prev2 = self.output3[cpair]
                 else: 
@@ -637,9 +680,9 @@ def visualization(adata, model_params, dist_on = True, port = 8521):
     model = CellModel
     dist_on = False
     if dist_on:
-        grid2 = CanvasGrid(agent_portrayal, 75,55, 700, 700)
+        grid2 = CanvasGrid(agent_portrayal, 90,130, 700, 700)
     else: 
-        grid2 = CanvasGrid(agent_portrayal, 75,55, 700, 700)
+        grid2 = CanvasGrid(agent_portrayal, 90,130, 700, 700)
     
     server = ModularServer(model,
                            [grid2],
