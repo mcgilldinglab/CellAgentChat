@@ -201,7 +201,7 @@ def create_masked_connections(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pa
     num_rec = len(rec_uni)
     num_lig = len(lig_uni)
     num_inputs = num_rec + num_lig
-    #l = list(rec_uni.keys())+list(lig_uni.keys())
+    l = list(rec_uni.keys())+list(lig_uni.keys())
     #inputs = adata[:, l].X.toarray()
     if scipy.sparse.issparse(adata.X):
         input_recs = adata[:, list(rec_uni.keys())].X.toarray()
