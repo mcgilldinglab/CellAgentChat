@@ -18,7 +18,7 @@ def create_anndata(gene_expression, meta, x_umap = None, coordinates = None, pse
     cell_types = list(meta['cell_type'])
     adata.obs['cell_type'] = cell_types
     #Batch
-    batch = list(meta['Batch']
+    batch = list(meta['Batch'])
     adata.obs['Batch'] = batch
     
     #spatial coordinates
