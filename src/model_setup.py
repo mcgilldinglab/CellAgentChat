@@ -549,22 +549,21 @@ def feature_selection(model, mat, C, rec_uni, start=0, perc=50):
         y_pred = model(x_train)
     cost = criterion(y_pred,y_train)
     
-    losses = permutate_receptors(model, perc, start=0, num=len(rec_uni), mat=mat, C=C, ocost=cost, loss=[], criterion=criterion)
-    
+    losses = permutate_receptors(
+        model, start=0, num=len(rec_uni), mat=mat, C=C, ocost=cost, loss=[], criterion=criterion)
+    mean = torch.mean(torch.stack(losses))
     lmin = min(losses)
     lmax = max(losses)
-    l2 = [val/mean for val in loss]
-    conversion_rates=[]  
+    l2 = [val/mean for val in losses]
+    conversion_rates = []
     for val in l2:
         if val > 1:
             conversion_rates.append(1)
         elif val < 0.4:
             conversion_rates.append(0.4)
         else: 
-            conversion_rates.append(val)
-    #l2 = [((val - lmin) / (lmax-lmin)).item() for val in losses]
-    
-    #conversion_rates = [val if val > 0.4 else 0.4 for val in l2]
+            conversion_rates.append((val.item()))
+
     print("Complete")
     return conversion_rates
 
