@@ -1,3 +1,4 @@
+
 import csv
 import pandas as pd
 import numpy as np
@@ -550,7 +551,7 @@ def feature_selection(model, mat, C, rec_uni, start=0, perc=50):
     cost = criterion(y_pred,y_train)
     
     losses = permutate_receptors(
-        model, start=0, num=len(rec_uni), mat=mat, C=C, ocost=cost, loss=[], criterion=criterion)
+        model, start=0, num=len(rec_uni), mat=mat, C=C, ocost=cost, loss=[], criterion=criterion, perc=perc)
     mean = torch.mean(torch.stack(losses))
     lmin = min(losses)
     lmax = max(losses)
