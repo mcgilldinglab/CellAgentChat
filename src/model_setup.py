@@ -117,13 +117,13 @@ def calc_distance(pair, pos_l, pos_r, d_lig, d_rec, reg=1, reg_m=1, iters=100):
 
 def load_tf_db(species, adata, rec_uni):
     if species == 'mouse':
-        file1 = "../databases/TF_TG_mouse.csv"
-        file2 = "../databases/KEGG_mouse.csv"
-        file3 = "../databases/REACTOME_mouse.csv"
+        file1 = "databases/TF_TG_mouse.csv"
+        file2 = "databases/KEGG_mouse.csv"
+        file3 = "databases/REACTOME_mouse.csv"
     if species == 'human':
-        file1 = "../databases/TF_TG_human.csv"
-        file2 = "../databases/KEGG_human.csv"
-        file3 = "../databases/REACTOME_human.csv"
+        file1 = "databases/TF_TG_human.csv"
+        file2 = "databases/KEGG_human.csv"
+        file3 = "databases/REACTOME_human.csv"
       
     #TF_TG dataframe
     df = pd.read_csv(file1)
