@@ -20,7 +20,9 @@ def copy(adata):
 
 
 def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
-                     dist=False, tau=2, rec_block=False):
+                     dist=False, tau=2, rec_block=False, seed=1234):
+    np.random.seed(seed)
+                         
     #Get average distance
     distance = 1
     if dist:
@@ -68,7 +70,9 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
 
 
 def permutation_test_pseudotime(threshold, N, adata, lig_uni, rec_uni, rates, bins = 10, dist=False,
-        shift = 0, tau=2, noise=5, rec_block=False):
+        shift = 0, tau=2, noise=5, rec_block=False, seed=1234):
+    np.random.seed(seed)
+            
     fin = {}
     avg = 0
     i = 1
