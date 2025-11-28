@@ -9,7 +9,7 @@ import math
 
 
 
-def get_distribution(fin, dist=0, scaled=False, pseudotime=False):
+def get_distribution(fin, dist=0, scaled=False, pseudotime=False, shape_factor=0.98, scale_factor=1.2,):
     print("Getting background distribution for each ligand-receptor pair")
     fin3 = {}
     i = 0
@@ -18,12 +18,14 @@ def get_distribution(fin, dist=0, scaled=False, pseudotime=False):
         alist = fin[key]
         if not pseudotime:
             alpha, loc, scale = gamma.fit(alist, floc=0)
+            alpha_adj = alpha * shape_factor
+            scale_adj = scale * scale_factor
             if scaled and dist > 0:
                 #fin3[key] = (alpha/2, 0, (scale/dist)/2)
-                fin3[key] = ((alpha*0.98)/2, 0, ((scale*1.2)/dist)/2)
+                fin3[key] = ((alpha_adj)/2, 0, ((scale_adj)/dist)/2)
             else:
                 #fin3[key] = (alpha, 0, scale)
-                fin3[key] = (alpha*0.98, 0, scale*1.2)
+                fin3[key] = (alpha_adj, 0, scale_adj)
         else:
             #Pseudotime
             alpha, loc, scale = gamma.fit(alist, floc=min(alist)-0.00000001)
