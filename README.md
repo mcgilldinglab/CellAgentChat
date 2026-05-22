@@ -39,13 +39,24 @@ The ABM framework further allows us to adjust the agent behavior rules, facilita
 
 ### Installing CellAgentChat
 
-You may install CellAgentChat and its dependencies by the following command:
+You may install CellAgentChat and its dependencies by the following commands:
 
 ```
 git clone https://github.com/mcgilldinglab/CellAgentChat.git
 cd CellAgentChat
-pip3 install -r requirements.txt 
+pip install .
 ```
+
+Install PyTorch separately. This is required for features such as receptor conversion modeling, feature selection, in-silico receptor perturbation, and downstream gene prediction.
+
+```
+pip install torch
+```
+
+For platform-specific CPU/GPU install instructions, see the official PyTorch guide:
+https://pytorch.org/get-started/locally/
+
+For a full user guide, see the Read the Docs site once published.
 
 ## Input Preparation
 
@@ -69,7 +80,7 @@ This is a three column csv or text file that contains the spatial coordinates of
 
 This is a two column csv or text file that contains the pseudotime values of each cell (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/pseudotime.csv)). The first column should be the ```cell``` (matching those in ```meta.txt```) and the second column should be the pseudotime values of each cell. Alternatively, we provide the option to calculate the pseudotime values manually using Slingshot.
 
-#### Anndata object (h5ad file) Optional)
+#### Anndata object (h5ad file) (Optional)
 
 The gene expression, cell type, spatial coordinates and pseudotime values can also all be stored in an anndata input file. The gene expression should be stored in the data matrix ```X```. The cell types and spatial coordinates (optional) and pseudotime (optional) should be stored in the observations under the column names ```cell_type```, ```x```, ```y``` and ```pseudotime```, respectively. 
 
@@ -88,6 +99,10 @@ Please check the tutorial directory of the repository.
 Our animation platform offers real-time visualization of the receiving interactions between individual cells. Additionally, users have the flexibility to perform effective in-silico perturbations by manipulating various parameters of the model.
 
 To access the tutorial on server setup for our animation platform, please consult part 6 of either of the tutorial, available with or without pseudotime.
+
+## Release History
+
+* `0.1.0`: Initial CellAgentChat workflow.
 
 ## Contact
 

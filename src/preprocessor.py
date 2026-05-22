@@ -25,8 +25,8 @@ def create_anndata(gene_expression, meta, x_umap = None, coordinates = None, pse
     if isinstance(coordinates, pd.DataFrame):
         x_coords = list(coordinates['x'])
         y_coords = list(coordinates['y'])
-        adata.obs['x'] = y_coords
-        adata.obs['y'] = x_coords
+        adata.obs['x'] = x_coords
+        adata.obs['y'] = y_coords
         if max(x_coords) > 10000:
             adata.obs['x'] //= 1000
         if max(y_coords) > 10000:

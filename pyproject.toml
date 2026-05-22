@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "CellAgentChat"
+version = "0.1.0"
+description = "Harnessing Agent-Based Modeling in CellAgentChat to unravel cell-cell interactions from single-cell data"
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+authors = [
+  { name = "Vishvak Raghavan", email = "vishvak.raghavan@mail.mcgill.ca" },
+]
+requires-python = ">=3.10"
+dependencies = [
+  "anndata>=0.8.0",
+  "matplotlib>=3.6.0",
+  "Mesa==1.0.0",
+  "numpy>=1.22.3",
+  "pandas>=1.5.0",
+  "pyslingshot>=0.0.2",
+  "scanpy>=1.9.6",
+  "scipy>=1.9.1",
+  "seaborn>=0.12.0",
+  "sparselinear",
+]
+
+[project.optional-dependencies]
+docs = [
+  "myst-parser>=2.0.0",
+  "Sphinx>=7.2.0",
+  "sphinx-rtd-theme>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mcgilldinglab/CellAgentChat"
+Documentation = "https://cellagentchat.readthedocs.io/"
+Repository = "https://github.com/mcgilldinglab/CellAgentChat"
+Issues = "https://github.com/mcgilldinglab/CellAgentChat/issues"
+
+[tool.setuptools]
+include-package-data = true
+py-modules = [
+  "Communication",
+  "abm",
+  "abm_pseudotime",
+  "bckground_distribution",
+  "communication_pseudotime",
+  "model_setup",
+  "permutations",
+  "preprocessor",
+  "trajectory",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"

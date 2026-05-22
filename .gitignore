@@ -1,1 +1,6 @@
 tutorial/gene_expression.csv
+build/
+dist/
+*.egg-info/
+.doctrees/
+docs/_build/
