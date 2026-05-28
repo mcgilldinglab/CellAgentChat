@@ -47,14 +47,13 @@ cd CellAgentChat
 pip install .
 ```
 
-Install PyTorch separately. This is required for features such as receptor conversion modeling, feature selection, in-silico receptor perturbation, and downstream gene prediction.
+Install PyTorch and `torch-sparse` separately. These are required for features such as receptor conversion modeling, feature selection, in-silico receptor perturbation, and downstream gene prediction.
 
-```
-pip install torch
-```
-
-For platform-specific CPU/GPU install instructions, see the official PyTorch guide:
+For platform-specific CPU/GPU install instructions for PyTorch, see the official PyTorch guide:
 https://pytorch.org/get-started/locally/
+
+For `torch-sparse` install instructions that match your PyTorch and CUDA versions, see:
+https://github.com/rusty1s/pytorch_sparse
 
 For a full user guide, see the Read the Docs site once published.
 

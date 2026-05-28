@@ -16,11 +16,38 @@ import random
 import math
 import scipy.stats
 import ot
+from importlib import resources
+
+
+def _module_path(*parts):
+    return os.path.join(os.path.dirname(__file__), *parts)
+
+
+def _packaged_data_path(*parts):
+    return str(resources.files("cellagentchat_data").joinpath(*parts))
+
+
+def _resolve_data_file(path):
+    if os.path.isabs(path) or os.path.exists(path):
+        return path
+
+    local_path = _module_path(path)
+    if os.path.exists(local_path):
+        return local_path
+
+    normalized = path.replace("\\", "/")
+    package_parts = tuple(part for part in normalized.split("/") if part)
+    packaged_path = _packaged_data_path(*package_parts)
+    if os.path.exists(packaged_path):
+        return packaged_path
+
+    return path
 
 
 
 def load_db(adata, file = 'human_lr_pair.tsv', sep='\t'):
     print("Loading Database...")
+    file = _resolve_data_file(file)
     #human ligand universe
     lig_uni = {}
     #human receptor universe
@@ -118,13 +145,13 @@ def calc_distance(pair, pos_l, pos_r, d_lig, d_rec, reg=1, reg_m=1, iters=100):
 
 def load_tf_db(species, adata, rec_uni):
     if species == 'mouse':
-        file1 = "databases/TF_TG_mouse.csv"
-        file2 = "databases/KEGG_mouse.csv"
-        file3 = "databases/REACTOME_mouse.csv"
+        file1 = _resolve_data_file("databases/TF_TG_mouse.csv")
+        file2 = _resolve_data_file("databases/KEGG_mouse.csv")
+        file3 = _resolve_data_file("databases/REACTOME_mouse.csv")
     if species == 'human':
-        file1 = "databases/TF_TG_human.csv"
-        file2 = "databases/KEGG_human.csv"
-        file3 = "databases/REACTOME_human.csv"
+        file1 = _resolve_data_file("databases/TF_TG_human.csv")
+        file2 = _resolve_data_file("databases/KEGG_human.csv")
+        file3 = _resolve_data_file("databases/REACTOME_human.csv")
       
     #TF_TG dataframe
     df = pd.read_csv(file1)
@@ -480,7 +507,7 @@ def train(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs, path, epochs=50
     
     
 def load_model(path):
-    model = torch.load(path)
+    model = torch.load(path, weights_only=False)
     return model
 
 
@@ -585,23 +612,27 @@ def get_target_genes(receptors, N, model, mat, C, rec_uni, adata, perc=50, thres
         zeros = np.zeros(N)
         mat2 = copy.deepcopy(mat)
         mat2 = mat2.transpose()
+        matched = False
         for i, rec2 in enumerate(rec_uni.keys()):
             if rec2 == rec:
-        #new
                 tmp = mat2[i]
-        if perc != 100:
-            random.shuffle(tmp)
-            new_arr_no_0 = tmp[tmp!=0.0]
-            scale = np.percentile(new_arr_no_0, 100-perc)
-            if scale < 1:
-                tmp = tmp*scale
-            else:
-                tmp = tmp/scale
-            mat2[i] = tmp
-        else:
-            tmp = zeros
-            mat2[i] = tmp
-        mat2 = mat2.transpose()       
+                if perc != 100:
+                    random.shuffle(tmp)
+                    new_arr_no_0 = tmp[tmp!=0.0]
+                    if len(new_arr_no_0) != 0:
+                        scale = np.percentile(new_arr_no_0, 100-perc)
+                        if scale < 1:
+                            tmp = tmp*scale
+                        else:
+                            tmp = tmp/scale
+                else:
+                    tmp = zeros
+                mat2[i] = tmp
+                matched = True
+                break
+        if not matched:
+            raise ValueError(f"Receptor {rec} not found in rec_uni")
+        mat2 = mat2.transpose()        
         """
                 mat2[i] = zeros
         mat2 = mat2.transpose()
@@ -656,6 +687,7 @@ def plot_results(dict1, adata, path='figures'):
 def block_receptors(adata, receptors, rec_uni, lig_uni, net, perc=50, threshold=50):
     print("Blocked Receptor Analysis")
     model = load_model(net)
+    model.eval()
     #get NN inputs
     if scipy.sparse.issparse(adata.X):
         input_recs = adata[:, list(rec_uni.keys())].X.toarray()

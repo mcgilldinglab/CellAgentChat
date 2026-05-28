@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "CellAgentChat"
-version = "0.1.0"
+version = "0.1.1"
 description = "Harnessing Agent-Based Modeling in CellAgentChat to unravel cell-cell interactions from single-cell data"
 readme = "README.md"
 license = { file = "LICENSE.txt" }
@@ -23,6 +23,7 @@ dependencies = [
   "scipy>=1.9.1",
   "seaborn>=0.12.0",
   "sparselinear",
+  "pot>=0.9.6",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +52,13 @@ py-modules = [
   "preprocessor",
   "trajectory",
 ]
+packages = ["cellagentchat_data"]
 
 [tool.setuptools.package-dir]
 "" = "src"
+
+[tool.setuptools.package-data]
+cellagentchat_data = [
+  "*.tsv",
+  "databases/*.csv",
+]
