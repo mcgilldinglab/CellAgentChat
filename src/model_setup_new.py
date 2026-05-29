@@ -2,7 +2,6 @@ import copy
 import csv
 import math
 import os
-import random
 from importlib import resources
 
 import anndata
@@ -25,6 +24,20 @@ def _get_device(device=None):
     if device is None:
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return torch.device(device)
+
+
+def _get_model_device(model, device=None):
+    if device is not None:
+        return _get_device(device)
+    try:
+        return next(model.parameters()).device
+    except StopIteration:
+        return _get_device()
+
+
+def _move_model_to_device(model, device=None):
+    resolved_device = _get_model_device(model, device=device)
+    return model.to(resolved_device), resolved_device
 
 
 def _module_path(*parts):
@@ -174,7 +187,7 @@ def create_masked_connections(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pa
     num_rec = len(rec_uni)
     num_lig = len(lig_uni)
     num_inputs = num_rec + num_lig
-    l = list(rec_uni.keys()) + list(lig_uni.keys())
+    input_names = list(rec_uni.keys()) + list(lig_uni.keys())
     inputs, all_genes, _, _ = _build_io_matrices(adata, lig_uni, rec_uni)
 
     num_lr_pairs = len(lr_pairs)
@@ -182,7 +195,7 @@ def create_masked_connections(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pa
     num_outputs = all_genes.shape[1]
 
     lr_index = dict(zip(lr_pairs, list(range(num_lr_pairs))))
-    input_index = dict(zip(l, list(range(num_inputs))))
+    input_index = dict(zip(input_names, list(range(num_inputs))))
     tf_index = dict(zip(list(tf_uni.keys()), list(range(num_tfs))))
     gene_index = dict(zip(list(adata.var_names), list(range(num_outputs))))
 
@@ -315,9 +328,10 @@ class net(nn.Module):
 
 
 class ExpDataset(Dataset):
-    def __init__(self, x, y):
-        self.x = torch.tensor(x, dtype=torch.float32)
-        self.y = torch.tensor(y, dtype=torch.float32)
+    def __init__(self, x, y, device=None):
+        tensor_device = _get_device(device) if device is not None else None
+        self.x = torch.tensor(x, dtype=torch.float32, device=tensor_device)
+        self.y = torch.tensor(y, dtype=torch.float32, device=tensor_device)
         self.length = self.x.shape[0]
 
     def __getitem__(self, idx):
@@ -350,10 +364,11 @@ def add_rates(conversion_rates, rec_uni):
     return rates
 
 
-def load_model(path="model.pt"):
+def load_model(path="model.pt", device=None):
     path = _resolve_output_file(path, "models", "model.pt")
-    model = torch.load(path, map_location=_get_device(), weights_only=False)
-    return model
+    resolved_device = _get_device(device)
+    model = torch.load(path, map_location=resolved_device, weights_only=False)
+    return model.to(resolved_device)
 
 
 def plot_results(dict1, adata, path="figures"):
@@ -397,18 +412,18 @@ def train(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs, path="model.pt"
     print("Setting up model")
     path = _resolve_output_file(path, "models", "model.pt")
     device = _get_device(device)
-    o = create_masked_connections(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs)
-    inputs, all_genes, num_inputs, num_lr_pairs, num_tfs, num_outputs, mask, mask2, mask3 = o
-    dataset = ExpDataset(inputs, all_genes)
+    model_components = create_masked_connections(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs)
+    inputs, all_genes, num_inputs, num_lr_pairs, num_tfs, num_outputs, mask, mask2, mask3 = model_components
+    dataset = ExpDataset(inputs, all_genes, device=device)
     dataloader = DataLoader(dataset=dataset, **_loader_kwargs(device, shuffle=False, batch_size=256))
     model = net(num_inputs, num_lr_pairs, num_tfs, num_outputs, mask, mask2, mask3).to(device)
     criterion = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
     print("Training model...")
-    costval = []
+    epoch_losses = []
     epoch_iter = tqdm(range(epochs), desc="Training epochs", unit="epoch")
-    for j in epoch_iter:
+    for _ in epoch_iter:
         last_cost = None
         for x_train, y_train in dataloader:
             x_train = x_train.to(device, non_blocking=device.type == "cuda")
@@ -421,7 +436,7 @@ def train(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs, path="model.pt"
             last_cost = cost
         if last_cost is not None:
             epoch_iter.set_postfix(loss=f"{last_cost.item():.6f}")
-            costval.append(last_cost.detach().cpu())
+            epoch_losses.append(last_cost.detach().cpu())
     model = model.to("cpu")
     torch.save(model, path)
     print("Training complete!")
@@ -429,17 +444,11 @@ def train(adata, lig_uni, rec_uni, tf_uni, rec_tf_uni, lr_pairs, path="model.pt"
 
 
 def perform_iteration(model, mat, C, criterion, batch=256, device=None):
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
-    else:
-        device = _get_device(device)
-    dataset2 = ExpDataset(mat, C)
+    model, device = _move_model_to_device(model, device=device)
+    dataset2 = ExpDataset(mat, C, device=device)
     dataloader2 = DataLoader(dataset=dataset2, **_loader_kwargs(device, shuffle=False, batch_size=batch))
-    preds = []
-    total_loss = 0.0
+    predictions = []
+    total_loss = torch.zeros((), device=device)
     total_examples = 0
     for x_train, y_train in dataloader2:
         x_train = x_train.to(device, non_blocking=device.type == "cuda")
@@ -447,43 +456,16 @@ def perform_iteration(model, mat, C, criterion, batch=256, device=None):
         batch_pred = model(x_train)
         batch_cost = criterion(batch_pred, y_train)
         batch_size = x_train.shape[0]
-        preds.append(batch_pred)
+        predictions.append(batch_pred)
         total_loss += batch_cost * batch_size
         total_examples += batch_size
 
-    if not preds:
+    if not predictions:
         raise ValueError("perform_iteration received no data to iterate over")
 
-    y_pred = torch.cat(preds, dim=0)
+    y_pred = torch.cat(predictions, dim=0)
     cost = total_loss / total_examples
     return y_pred, cost
-
-
-def permutate_receptors(model, start, num, ocost, mat, C, criterion, loss=None, perc=100, device=None):
-    if loss is None:
-        loss = []
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
-    zeros = np.zeros(len(mat))
-    for i in tqdm(range(start, num), desc="Permuting receptors", unit="receptor"):
-        mat2 = copy.deepcopy(mat).transpose()
-        tmp = mat2[i]
-        random.shuffle(tmp)
-        new_arr_no_0 = tmp[tmp != 0.0]
-        if perc == 100:
-            tmp = zeros
-        elif len(new_arr_no_0) != 0:
-            scale = np.percentile(new_arr_no_0, 100 - perc)
-            tmp = tmp * scale if scale < 1 else tmp / scale
-        mat2[i] = tmp
-        mat2 = mat2.transpose()
-        _, cost = perform_iteration(model, mat2, C, criterion, batch=mat2.shape[0], device=device)
-        dcost = abs(cost - ocost)
-        loss.append(dcost)
-    return loss
 
 
 def _shuffle_array(values, rng):
@@ -493,17 +475,17 @@ def _shuffle_array(values, rng):
 
 
 def _apply_receptor_perturbation(values, perc, zeros, rng):
-    tmp = _shuffle_array(values, rng)
-    new_arr_no_0 = tmp[tmp != 0.0]
+    perturbed_values = _shuffle_array(values, rng)
+    nonzero_values = perturbed_values[perturbed_values != 0.0]
     if perc == 100:
         return zeros
-    if len(new_arr_no_0) != 0:
-        scale = np.percentile(new_arr_no_0, 100 - perc)
-        tmp = tmp * scale if scale < 1 else tmp / scale
-    return tmp
+    if len(nonzero_values) != 0:
+        scale = np.percentile(nonzero_values, 100 - perc)
+        perturbed_values = perturbed_values * scale if scale < 1 else perturbed_values / scale
+    return perturbed_values
 
 
-def permutate_receptors_avg(
+def permutate_receptors(
     model,
     start,
     num,
@@ -519,68 +501,34 @@ def permutate_receptors_avg(
 ):
     if loss is None:
         loss = []
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
+    model, device = _move_model_to_device(model, device=device)
     if n_shuffles < 1:
         raise ValueError("n_shuffles must be at least 1")
 
-    zeros = np.zeros(len(mat))
+    zeroed_values = np.zeros(len(mat))
     base_rng = np.random.default_rng(seed)
-    for i in tqdm(range(start, num), desc="Permuting receptors (avg)", unit="receptor"):
+    for receptor_idx in tqdm(range(start, num), desc="Permuting receptors", unit="receptor"):
         receptor_losses = []
         for _ in range(n_shuffles):
-            mat2 = copy.deepcopy(mat).transpose()
-            tmp = _apply_receptor_perturbation(mat2[i], perc, zeros, base_rng)
-            mat2[i] = tmp
-            mat2 = mat2.transpose()
-            _, cost = perform_iteration(model, mat2, C, criterion, batch=mat2.shape[0], device=device)
-            receptor_losses.append(abs(cost - ocost))
+            perturbed_matrix = copy.deepcopy(mat).transpose()
+            perturbed_values = _apply_receptor_perturbation(perturbed_matrix[receptor_idx], perc, zeroed_values, base_rng)
+            perturbed_matrix[receptor_idx] = perturbed_values
+            perturbed_matrix = perturbed_matrix.transpose()
+            _, perturbed_cost = perform_iteration(
+                model, perturbed_matrix, C, criterion, batch=perturbed_matrix.shape[0], device=device
+            )
+            receptor_losses.append(abs(perturbed_cost - ocost))
         loss.append(torch.stack(receptor_losses).mean())
     return loss
 
 
-def feature_selection(model, mat, C, rec_uni, start=0, perc=100, device=None):
+def feature_selection(model, mat, C, rec_uni, start=0, perc=100, n_shuffles=10, seed=None, device=None):
     print("Performing feature selection to obtain conversion rates...")
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
+    model, device = _move_model_to_device(model, device=device)
     criterion = nn.MSELoss()
     _, cost = perform_iteration(model, mat, C, criterion, batch=mat.shape[0], device=device)
 
     losses = permutate_receptors(
-        model, start=start, num=len(rec_uni), mat=mat, C=C, ocost=cost, loss=[], criterion=criterion, perc=perc, device=device
-    )
-    mean = torch.mean(torch.stack(losses))
-    l2 = [val / mean for val in losses]
-    conversion_rates = []
-    for val in l2:
-        if val > 1:
-            conversion_rates.append(1)
-        elif val < 0.4:
-            conversion_rates.append(0.4)
-        else:
-            conversion_rates.append(val.item())
-
-    print("Complete")
-    return conversion_rates
-
-
-def feature_selection_avg(model, mat, C, rec_uni, start=0, perc=100, n_shuffles=10, seed=None, device=None):
-    print("Performing feature selection to obtain conversion rates...")
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
-    criterion = nn.MSELoss()
-    _, cost = perform_iteration(model, mat, C, criterion, batch=mat.shape[0], device=device)
-
-    losses = permutate_receptors_avg(
         model,
         start=start,
         num=len(rec_uni),
@@ -594,59 +542,22 @@ def feature_selection_avg(model, mat, C, rec_uni, start=0, perc=100, n_shuffles=
         seed=seed,
         device=device,
     )
-    mean = torch.mean(torch.stack(losses))
-    l2 = [val / mean for val in losses]
+    mean_loss = torch.mean(torch.stack(losses))
+    normalized_losses = [loss_value / mean_loss for loss_value in losses]
     conversion_rates = []
-    for val in l2:
-        if val > 1:
+    for normalized_loss in normalized_losses:
+        if normalized_loss > 1:
             conversion_rates.append(1)
-        elif val < 0.4:
+        elif normalized_loss < 0.4:
             conversion_rates.append(0.4)
         else:
-            conversion_rates.append(val.item())
+            conversion_rates.append(normalized_loss.item())
 
     print("Complete")
     return conversion_rates
 
 
-def get_target_genes(receptors, N, model, mat, C, rec_uni, adata, perc=100, threshold=50, device=None):
-    dict2 = {}
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
-    y_pred, _ = perform_iteration(model, mat, C, nn.MSELoss(), batch=mat.shape[0], device=device)
-    rec_keys = list(rec_uni.keys())
-    for rec in tqdm(receptors, desc="Getting target genes", unit="receptor"):
-        zeros = np.zeros(N)
-        mat2 = copy.deepcopy(mat).transpose()
-        for i, rec2 in enumerate(rec_keys):
-            if rec2 != rec:
-                continue
-            tmp = mat2[i]
-            if perc != 100:
-                random.shuffle(tmp)
-                new_arr_no_0 = tmp[tmp != 0.0]
-                if len(new_arr_no_0) != 0:
-                    scale = np.percentile(new_arr_no_0, 100 - perc)
-                    tmp = tmp * scale if scale < 1 else tmp / scale
-            else:
-                tmp = zeros
-            mat2[i] = tmp
-            break
-        mat2 = mat2.transpose()
-        y_pred2, _ = perform_iteration(model, mat2, C, nn.MSELoss(), batch=mat2.shape[0], device=device)
-        y = abs(y_pred - y_pred2).cpu().detach().numpy()
-        zz = y.mean(axis=0)
-        ind = np.argpartition(zz, -threshold)[-threshold:]
-        top = list(zz[ind])
-        genes = [gene for i, gene in enumerate(adata.var_names) if i in ind]
-        dict2[rec] = (top, genes)
-    return dict2
-
-
-def get_target_genes_avg(
+def get_target_genes(
     receptors,
     N,
     model,
@@ -660,54 +571,43 @@ def get_target_genes_avg(
     seed=None,
     device=None,
 ):
-    dict2 = {}
-    if device is None:
-        try:
-            device = next(model.parameters()).device
-        except StopIteration:
-            device = _get_device()
+    target_gene_results = {}
+    model, device = _move_model_to_device(model, device=device)
     if n_shuffles < 1:
         raise ValueError("n_shuffles must be at least 1")
 
-    y_pred, _ = perform_iteration(model, mat, C, nn.MSELoss(), batch=mat.shape[0], device=device)
-    rec_keys = list(rec_uni.keys())
+    baseline_predictions, _ = perform_iteration(model, mat, C, nn.MSELoss(), batch=mat.shape[0], device=device)
+    receptor_names = list(rec_uni.keys())
     base_rng = np.random.default_rng(seed)
-    for rec in tqdm(receptors, desc="Getting target genes (avg)", unit="receptor"):
-        zeros = np.zeros(N)
-        averaged_pred = []
+    for rec in tqdm(receptors, desc="Getting target genes", unit="receptor"):
+        zeroed_values = np.zeros(N)
+        shuffled_predictions = []
         for _ in range(n_shuffles):
-            mat2 = copy.deepcopy(mat).transpose()
-            for i, rec2 in enumerate(rec_keys):
-                if rec2 != rec:
+            perturbed_matrix = copy.deepcopy(mat).transpose()
+            for receptor_idx, receptor_name in enumerate(receptor_names):
+                if receptor_name != rec:
                     continue
-                tmp = _apply_receptor_perturbation(mat2[i], perc, zeros, base_rng)
-                mat2[i] = tmp
+                perturbed_values = _apply_receptor_perturbation(
+                    perturbed_matrix[receptor_idx], perc, zeroed_values, base_rng
+                )
+                perturbed_matrix[receptor_idx] = perturbed_values
                 break
-            mat2 = mat2.transpose()
-            y_pred2, _ = perform_iteration(model, mat2, C, nn.MSELoss(), batch=mat2.shape[0], device=device)
-            averaged_pred.append(y_pred2)
-        mean_pred = torch.stack(averaged_pred).mean(dim=0)
-        y = abs(y_pred - mean_pred).cpu().detach().numpy()
-        zz = y.mean(axis=0)
-        ind = np.argpartition(zz, -threshold)[-threshold:]
-        top = list(zz[ind])
-        genes = [gene for i, gene in enumerate(adata.var_names) if i in ind]
-        dict2[rec] = (top, genes)
-    return dict2
+            perturbed_matrix = perturbed_matrix.transpose()
+            shuffled_prediction, _ = perform_iteration(
+                model, perturbed_matrix, C, nn.MSELoss(), batch=perturbed_matrix.shape[0], device=device
+            )
+            shuffled_predictions.append(shuffled_prediction)
+        mean_perturbed_prediction = torch.stack(shuffled_predictions).mean(dim=0)
+        prediction_diff = abs(baseline_predictions - mean_perturbed_prediction).detach().cpu().numpy()
+        mean_gene_diff = prediction_diff.mean(axis=0)
+        top_gene_indices = np.argpartition(mean_gene_diff, -threshold)[-threshold:]
+        top_gene_scores = list(mean_gene_diff[top_gene_indices])
+        top_gene_names = [gene for gene_idx, gene in enumerate(adata.var_names) if gene_idx in top_gene_indices]
+        target_gene_results[rec] = (top_gene_scores, top_gene_names)
+    return target_gene_results
 
 
-def block_receptors(adata, receptors, rec_uni, lig_uni, net, perc=100, threshold=50, device=None):
-    print("Blocked Receptor Analysis")
-    device = _get_device(device)
-    model = load_model(net).to(device)
-    model.eval()
-    inputs, all_genes, _, _ = _build_io_matrices(adata, lig_uni, rec_uni)
-    print("Get original")
-    dict1 = get_target_genes(receptors, len(adata.obs), model, inputs, all_genes, rec_uni, adata, perc, threshold, device=device)
-    plot_results(dict1, adata)
-
-
-def block_receptors_avg(
+def block_receptors(
     adata,
     receptors,
     rec_uni,
@@ -721,11 +621,11 @@ def block_receptors_avg(
 ):
     print("Blocked Receptor Analysis")
     device = _get_device(device)
-    model = load_model(net).to(device)
+    model = load_model(net, device=device)
     model.eval()
     inputs, all_genes, _, _ = _build_io_matrices(adata, lig_uni, rec_uni)
     print("Get original")
-    dict1 = get_target_genes_avg(
+    target_gene_results = get_target_genes(
         receptors,
         len(adata.obs),
         model,
@@ -739,4 +639,4 @@ def block_receptors_avg(
         seed=seed,
         device=device,
     )
-    plot_results(dict1, adata)
+    plot_results(target_gene_results, adata)
