@@ -44,8 +44,10 @@ def _normalize_obs_column(adata, source_label, target_label, required=False, def
 
 
 def _get_coordinates_from_obsm(adata, coordinates_key):
+    if coordinates_key is None:
+        return None
     if coordinates_key not in adata.obsm:
-        raise ValueError(f"adata.obsm is missing coordinate key: {coordinates_key}")
+        return None
     coords = np.asarray(adata.obsm[coordinates_key], dtype=float)
     if coords.ndim != 2:
         raise ValueError(f"adata.obsm['{coordinates_key}'] must be a 2D array")
@@ -72,6 +74,8 @@ def _scale_coordinates_for_mesa(coords, target_range=MESA_TARGET_RANGE):
 
 
 def _assign_coordinate_columns(adata, coords, scale_for_mesa=True):
+    if coords is None:
+        return
     coord_names = ["x", "y"] if coords.shape[1] == 2 else ["x", "y", "z"]
 
     for idx, name in enumerate(coord_names):
@@ -104,4 +108,3 @@ def setup_adata(
     coords = _get_coordinates_from_obsm(adata, coordinates_key)
     _assign_coordinate_columns(adata, coords, scale_for_mesa=scale_for_mesa)
     return adata
-
