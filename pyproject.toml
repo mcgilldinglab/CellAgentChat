@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "CellAgentChat"
-version = "0.1.1"
+version = "0.2.0"
 description = "Harnessing Agent-Based Modeling in CellAgentChat to unravel cell-cell interactions from single-cell data"
 readme = "README.md"
 license = { file = "LICENSE.txt" }
@@ -44,13 +44,11 @@ include-package-data = true
 py-modules = [
   "Communication",
   "abm",
-  "abm_pseudotime",
   "bckground_distribution",
-  "communication_pseudotime",
   "model_setup",
   "permutations",
   "preprocessor",
-  "trajectory",
+  "output_paths",
 ]
 packages = ["cellagentchat_data"]
 
