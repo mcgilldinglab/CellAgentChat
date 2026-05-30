@@ -6,7 +6,7 @@ import pandas as pd
 
 import abm as abm
 from output_paths import artifact_dir
-from bckground_distribution_new import (
+from bckground_distribution import (
     get_interaction_matrix,
     get_significant_lr_pairs,
     pvalues_threshold,
