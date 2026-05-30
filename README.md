@@ -89,6 +89,7 @@ To access the tutorial on server setup for our animation platform, please consul
 
 ## Release History
 
+* `0.2.0`: Latest CellAgentChat version
 * `0.1.0`: Initial CellAgentChat workflow.
 
 ## Contact
