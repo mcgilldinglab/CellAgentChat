@@ -4,7 +4,7 @@ import anndata
 import numpy as np
 from tqdm.auto import tqdm
 
-from abm import CellModel
+from abm import CellModel, get_lr_interactions2
 
 
 def copy(adata):
@@ -69,7 +69,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates, dist=False, t
         )
         model2.step()
 
-        res = abm.get_lr_interactions2(model2)
+        res = get_lr_interactions2(model2)
         _accumulate_results(fin, res)
         avg = _average_num_scores(fin)
         i += 1
