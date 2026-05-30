@@ -57,31 +57,19 @@ https://github.com/rusty1s/pytorch_sparse
 
 For a full user guide, see the Read the Docs site once published.
 
-## Input Preparation
+## Required Files
 
-#### Ligand-Receptor Database (Mandatory)
+#### Ligand-Receptor Database
 
-This is a three column csv, tsv or text file that contains the ligand receptor pairs. We provide a ligand-receptor database from CellTalkDB (see human database [here](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/human_lr_pair.tsv)). However, the user can opt to provide their own custom database. The first column contains the ```lr_pair```, the second column contains the ```ligand_gene_symbol``` and the third column contains the ```receptor_gene_symbol```. Note: the gene/protein ids must be the gene names, matching the gene expression file. All other columns will be ignored. 
+This is a three column csv, tsv or text file containing ligand-receptor pairs. We provide bundled CellTalkDB-derived databases for human and mouse in [`src/cellagentchat_data/human_lr_pair.tsv`](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/cellagentchat_data/human_lr_pair.tsv) and [`src/cellagentchat_data/mouse_lr_pair.tsv`](https://github.com/mcgilldinglab/CellAgentChat/blob/main/src/cellagentchat_data/mouse_lr_pair.tsv). The expected columns are ```lr_pair```, ```ligand_gene_symbol``` and ```receptor_gene_symbol```. Gene identifiers should match the gene names used in the AnnData file. Additional columns are ignored.
 
-#### Gene Expression file (Mandatory)
+#### TF Databases
 
-This is a cell X genes csv or text file. This file can contain the unnormalized counts (we provide a preprocessing function to normalize the counts) for each gene or normalized values (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/gene_expression.csv.zip)). Note: the gene/protein ids must be the gene names. 
+CellAgentChat also uses bundled pathway and TF-target reference databases stored in [`src/cellagentchat_data/databases/`](https://github.com/mcgilldinglab/CellAgentChat/tree/main/src/cellagentchat_data/databases). This directory includes the human and mouse reference files ```TF_TG_human.csv```, ```TF_TG_mouse.csv```, ```KEGG_human.csv```, ```KEGG_mouse.csv```, ```REACTOME_human.csv``` and ```REACTOME_mouse.csv```.
 
-#### Meta file (Mandatory)
+#### AnnData Object (`.h5ad`)
 
-This is a three column csv or text file indicating the cell type/cluster name and batch of each cell (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/meta.csv)). The first column should be the ```cell```, the second column should be the ```cell_type``` and the third column should be the ```Batch```. 
-
-#### Spatial Coordinates file (Optional)
-
-This is a three column csv or text file that contains the spatial coordinates of each cell determined from spatial transcriptomics data (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/spatial_coordinates.csv)). The first column should be the ```cell``` (matching those in ```meta.txt```). The second and third columns should be the ```x``` and ```y``` coordinates, respectively. 
-
-#### Pseudotime file (Optional)
-
-This is a two column csv or text file that contains the pseudotime values of each cell (see [example](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/pseudotime.csv)). The first column should be the ```cell``` (matching those in ```meta.txt```) and the second column should be the pseudotime values of each cell. Alternatively, we provide the option to calculate the pseudotime values manually using Slingshot.
-
-#### Anndata object (h5ad file) (Optional)
-
-The gene expression, cell type, spatial coordinates and pseudotime values can also all be stored in an anndata input file. The gene expression should be stored in the data matrix ```X```. The cell types and spatial coordinates (optional) and pseudotime (optional) should be stored in the observations under the column names ```cell_type```, ```x```, ```y``` and ```pseudotime```, respectively. 
+The primary input dataset should be provided as an AnnData file. Gene expression should be stored in ```X```, and the observation metadata should contain the cell annotations required for analysis, including cell type labels. Spatial coordinates and other analysis-specific metadata can also be stored in the AnnData object when available.
 
 ## Tutorials
 
@@ -91,7 +79,7 @@ Please check the tutorial directory of the repository.
 
 * [CellAgentChat analysis after gene expression imputation using MAGIC](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_imputation.ipynb)
 
-* [CellAgentChat analysis after spot deconvolution using SpatialScope](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_spot_deconvolution.ipynb)
+* [CellAgentChat analysis after spot deconvolution using SpatialScope (older version)](https://github.com/mcgilldinglab/CellAgentChat/blob/main/tutorial/Tutorial_with_spot_deconvolution_old.ipynb)
 
 ## Animation
 
