@@ -1,115 +1,80 @@
+from collections import defaultdict
+
 import anndata
 import numpy as np
-import mesa
-import abm
-from abm import CellAgent
+from tqdm.auto import tqdm
+
 from abm import CellModel
-import abm_pseudotime
-from abm_pseudotime import CellAgent2
-from abm_pseudotime import CellModel2
-import os
 
 
 def copy(adata):
-    bdata = anndata.AnnData(
-      X = adata.X,
-      obs = adata.obs,
-      var = adata.var)
-    return bdata
+    return anndata.AnnData(X=adata.X.copy(), obs=adata.obs.copy(), var=adata.var.copy())
 
 
+def _accumulate_results(fin, res):
+    for dic in res.values():
+        for key, value in dic.items():
+            fin[key].append(value)
 
-def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates,
-                     dist=False, tau=2, rec_block=False, seed=1234):
+
+def _average_num_scores(fin):
+    if not fin:
+        return 0
+    val = sum(len(values) for values in fin.values())
+    return val / len(fin)
+
+
+def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates, dist=False, tau=2, rec_block=False, seed=1234):
     np.random.seed(seed)
-                         
-    #Get average distance
+
     distance = 1
     if dist:
-        model3 = CellModel(N, adata, lig_uni, rec_uni, rates, dist=True, delta=1, max_steps=1,
-                    tau=tau, rec_block=rec_block, permutations=True)
+        model3 = CellModel(
+            N,
+            adata,
+            lig_uni,
+            rec_uni,
+            rates,
+            dist=True,
+            delta=1,
+            max_steps=1,
+            tau=tau,
+            rec_block=rec_block,
+            permutations=True,
+        )
         distance = model3.calc_normalized_dist()
-    
-    fin = {}
+
+    fin = defaultdict(list)
     avg = 0
     i = 0
+    progress = tqdm(desc="Permutations", unit="iter")
     while avg < threshold:
-        print("iteration: " + str(i))
+        progress.update(1)
+        progress.set_postfix(avg_scores=f"{avg:.2f}")
         bdata = copy(adata)
-        x = np.array(bdata.obs['cell_type'])
+        x = np.array(bdata.obs["cell_type"])
         np.random.shuffle(x)
-        bdata.obs['cell_type'] = x
-        model2 = CellModel(N, bdata, lig_uni, rec_uni, rates, dist=False, tau=tau,  max_steps=1,
-                           rec_block=rec_block, permutations=True)
-        for _ in range(1):
-            model2.step()
-            
+        bdata.obs["cell_type"] = x
+        model2 = CellModel(
+            N,
+            bdata,
+            lig_uni,
+            rec_uni,
+            rates,
+            dist=False,
+            tau=tau,
+            max_steps=1,
+            rec_block=rec_block,
+            permutations=True,
+        )
+        model2.step()
+
         res = abm.get_lr_interactions2(model2)
-        l= list(res.values())
-        for dic in l:
-            for key in dic.keys():
-                if key in fin.keys():
-                    list1 = fin[key]
-                    list1.append(dic[key])
-                    fin[key] = list1
-                else:
-                    list1 = []
-                    list1.append(dic[key])
-                    fin[key] = list1
-                    
-        #check average
-        val = 0
-        for key in fin.keys():
-            val += len(fin[key])
-        avg = val/len(fin.keys())
-        print("Average Number of LR Pair Scores:" + str(avg))
+        _accumulate_results(fin, res)
+        avg = _average_num_scores(fin)
         i += 1
-    return fin, model2, distance
-
-
-
-
-def permutation_test_pseudotime(threshold, N, adata, lig_uni, rec_uni, rates, bins = 10, dist=False,
-        shift = 0, tau=2, noise=5, rec_block=False, seed=1234):
-    np.random.seed(seed)
-            
-    fin = {}
-    avg = 0
-    i = 1
-    while avg < threshold:
-        print("iteration: " + str(i))
-        bdata = copy(adata)
-        x = np.array(bdata.obs['cell_type'])
-        np.random.shuffle(x)
-        bdata.obs['cell_type'] = x
-        model2 = CellModel2(N=N, adata=bdata, lig_uni=lig_uni, rec_uni=rec_uni, rates=rates, bins=bins,
-                            dist=dist, shift=shift, tau=tau, noise=noise, rec_block=rec_block, permutations=True)
-        distance = model2.calc_dist()
-        for _ in range(bins):
-            model2.step() 
-            
-        res = abm_pseudotime.get_lr_interactions2(model2)
-        l= list(res.values())
-        for dic in l:
-            for key in dic.keys():
-                if key in fin.keys():
-                    list1 = fin[key]
-                    list1.append(dic[key])
-                    fin[key] = list1
-                else:
-                    list1 = []
-                    list1.append(dic[key])
-                    fin[key] = list1
-                      
-        #check average
-        val = 0
-        for key in fin.keys():
-            val += len(fin[key])
-        avg = val/len(fin.keys())
-        print("Average Number of LR Pair Scores: "+ str(avg))
-        i += 1       
-    return fin, model2, distance
-
-
+    progress.close()
+    print(f"Average Number of LR Pair Scores:{avg}")
+    return dict(fin), model2, distance
 
 
