@@ -16,7 +16,7 @@ from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from CellAgentChat.src.model_setup import ExpDataset, block_receptors
+from model_setup import ExpDataset, block_receptors
 
 
 def check_threshold(tensor1, tensor2, threshold):
