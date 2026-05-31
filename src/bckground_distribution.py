@@ -20,9 +20,7 @@ def _resolve_distribution_file(path):
     if os.path.dirname(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         return path
-    if path == "distribution.csv":
-        return artifact_path("distributions", "distribution.csv")
-    return path
+    return artifact_path("distributions", path)
 
 
 def _clean_cluster_list(clusters):

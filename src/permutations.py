@@ -41,13 +41,14 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates, dist=False, t
             tau=tau,
             rec_block=rec_block,
             permutations=True,
+            show_init_progress=False,
         )
         distance = model3.calc_normalized_dist()
 
     fin = defaultdict(list)
     avg = 0
     i = 0
-    progress = tqdm(desc="Permutations", unit="iter")
+    progress = tqdm(desc="Permutations", unit=" iters")
     while avg < threshold:
         progress.update(1)
         progress.set_postfix(avg_scores=f"{avg:.2f}")
@@ -66,6 +67,7 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates, dist=False, t
             max_steps=1,
             rec_block=rec_block,
             permutations=True,
+            show_init_progress=False,
         )
         model2.step()
 
@@ -76,5 +78,4 @@ def permutation_test(threshold, N, adata, lig_uni, rec_uni, rates, dist=False, t
     progress.close()
     print(f"Average Number of LR Pair Scores:{avg}")
     return dict(fin), model2, distance
-
 
