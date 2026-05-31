@@ -503,7 +503,7 @@ class CellModel(Model):
             distances2_normalized = torch.zeros_like(distances2)
         return float(distances2_normalized.mean().item())
 
-    def step(self, show_agent_progress=True, agent_progress_position=0, agent_progress=None):
+    def step(self, show_agent_progress=False, agent_progress_position=0, agent_progress=None):
         self.rec_score = []
         if self.dist_param != 0 and self.curr_step == 0:
             self.avg_dist = self.calc_normalized_dist()
