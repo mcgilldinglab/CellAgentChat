@@ -120,7 +120,6 @@ def parameters(adata, lig_uni, rec_uni, rates, clusters, pairs, proteins):
         "dist": Checkbox("Distance", value=True),
         "sender": Choice("Sender", value=clusters[0], choices=clusters),
         "receiver": Choice("Receiver", value=clusters[0], choices=clusters),
-        "noise": Slider("Gaussian Noise Percentage", 5, 0, 50, 1),
         "text": StaticText("This is a descriptive textbox"),
     }
     return model_params
@@ -289,6 +288,7 @@ class CellModel(Model):
         receiver=False,
         permutations=False,
         net=None,
+        show_init_progress=True,
     ):
         # Mandatory Inputs
         self.num_agents = N
@@ -354,7 +354,11 @@ class CellModel(Model):
             self.tokenizer[str(clust)] = i
 
         # Create agents
-        agent_iter = tqdm(range(self.num_agents), desc="Initializing agents", unit="agent", leave=True)
+        agent_iter = (
+            tqdm(range(self.num_agents), desc="Initializing agents", unit="agent", leave=True)
+            if show_init_progress
+            else range(self.num_agents)
+        )
         for i in agent_iter:
             clust = self._cell_types[i]       # Cluster 
             batch = self._batches[i]          # Batch
@@ -637,7 +641,7 @@ def agent_portrayal(agent):
 
 def visualization(adata, model_params, dist_on=True, port=8521):
     model = CellModel
-    grid2 = CanvasGrid(agent_portrayal, 90, 130, 700, 700)
+    grid2 = CanvasGrid(agent_portrayal, 125, 125, 700, 700)
     server = ModularServer(model, [grid2], "CellAgentChat", model_params)
     server.port = port
     server.launch()
