@@ -1,64 +1,110 @@
-import scanpy as sc
-import pandas as pd
-import numpy as np
+import os
+
 import anndata
-import seaborn as sns
+import numpy as np
+import pandas as pd
+import scanpy as sc
 import scipy
+import seaborn as sns
 
 
-def create_anndata(gene_expression, meta, x_umap = None, coordinates = None, pseudotime = None):
-    
-    obs = gene_expression.index
-    var = gene_expression.columns
-    adata = anndata.AnnData(
-        X = scipy.sparse.csr_matrix(gene_expression.values, dtype='float32'),
-      obs = pd.DataFrame(index = obs),
-      var = pd.DataFrame(index = var))
-    #cell types
-    cell_types = list(meta['cell_type'])
-    adata.obs['cell_type'] = cell_types
-    #Batch
-    batch = list(meta['Batch'])
-    adata.obs['Batch'] = batch
-    
-    #spatial coordinates
-    if isinstance(coordinates, pd.DataFrame):
-        x_coords = list(coordinates['x'])
-        y_coords = list(coordinates['y'])
-        adata.obs['x'] = x_coords
-        adata.obs['y'] = y_coords
-        if max(x_coords) > 10000:
-            adata.obs['x'] //= 1000
-        if max(y_coords) > 10000:
-            adata.obs['y'] //= 1000
-    if isinstance(x_umap, pd.DataFrame):
-        adata.obsm['X_umap'] = x_umap.to_numpy()
-    
-    #pseudotime
-    if isinstance(pseudotime, pd.DataFrame):
-        adata.obs['pseudotime'] = pseudotime['pseudotime']
-          
+MESA_TARGET_RANGE = 100.0
+
+
+def _require_columns(df, required, name):
+    missing = [col for col in required if col not in df.columns]
+    if missing:
+        raise ValueError(f"{name} is missing required columns: {missing}")
+
+
+def _load_adata(adata_or_path, copy=True):
+    if isinstance(adata_or_path, anndata.AnnData):
+        return adata_or_path.copy() if copy else adata_or_path
+    if isinstance(adata_or_path, (str, os.PathLike)):
+        adata = anndata.read_h5ad(adata_or_path)
+        return adata.copy() if copy else adata
+    raise TypeError("adata_or_path must be an AnnData object or a path to an .h5ad file")
+
+
+def _normalize_obs_column(adata, source_label, target_label, required=False, default_value=None):
+    if source_label is None:
+        if required:
+            raise ValueError(f"{target_label} requires a source label")
+        if default_value is not None:
+            adata.obs[target_label] = default_value
+        return
+
+    if source_label not in adata.obs.columns:
+        raise ValueError(f"adata.obs is missing required column: {source_label}")
+
+    values = adata.obs[source_label]
+    if len(values) != adata.n_obs:
+        raise ValueError(f"adata.obs['{source_label}'] has length {len(values)} but expected {adata.n_obs}")
+    adata.obs[target_label] = values.to_numpy(copy=True)
+
+
+def _get_coordinates_from_obsm(adata, coordinates_key):
+    if coordinates_key is None:
+        return None
+    if coordinates_key not in adata.obsm:
+        return None
+    coords = np.asarray(adata.obsm[coordinates_key], dtype=float)
+    if coords.ndim != 2:
+        raise ValueError(f"adata.obsm['{coordinates_key}'] must be a 2D array")
+    if coords.shape[0] != adata.n_obs:
+        raise ValueError(
+            f"adata.obsm['{coordinates_key}'] has {coords.shape[0]} rows but expected {adata.n_obs}"
+        )
+    if coords.shape[1] not in (2, 3):
+        raise ValueError(
+            f"adata.obsm['{coordinates_key}'] must have 2 or 3 columns, found {coords.shape[1]}"
+        )
+    return coords
+
+
+def _scale_coordinates_for_mesa(coords, target_range=MESA_TARGET_RANGE):
+    mins = np.min(coords, axis=0)
+    shifted = coords - mins
+    max_range = float(np.max(np.ptp(coords, axis=0))) if coords.size else 0.0
+    if max_range <= 0:
+        scaled = np.zeros_like(coords, dtype=float)
+    else:
+        scaled = shifted * (target_range / max_range)
+    return scaled
+
+
+def _assign_coordinate_columns(adata, coords, scale_for_mesa=True):
+    if coords is None:
+        return
+    coord_names = ["x", "y"] if coords.shape[1] == 2 else ["x", "y", "z"]
+
+    for idx, name in enumerate(coord_names):
+        adata.obs[f"{name}_raw"] = coords[:, idx]
+
+    scaled_coords = _scale_coordinates_for_mesa(coords) if scale_for_mesa else coords.copy()
+    for idx, name in enumerate(coord_names):
+        adata.obs[name] = scaled_coords[:, idx]
+
+
+def setup_adata(
+    adata_or_path,
+    coordinates_key="spatial",
+    batch_label=None,
+    cell_type_label=None,
+    scale_for_mesa=True,
+    copy=True,
+):
+    if cell_type_label is None:
+        raise ValueError("cell_type_label is mandatory")
+
+    adata = _load_adata(adata_or_path, copy=copy)
+    _normalize_obs_column(adata, cell_type_label, "cell_type", required=True)
+
+    if batch_label is None:
+        adata.obs["Batch"] = "0"
+    else:
+        _normalize_obs_column(adata, batch_label, "Batch", required=True)
+
+    coords = _get_coordinates_from_obsm(adata, coordinates_key)
+    _assign_coordinate_columns(adata, coords, scale_for_mesa=scale_for_mesa)
     return adata
-
-
-def expression_processor(adata: anndata, normalize = True):
-    #Preprocess
-    sc.pp.filter_cells(adata, min_genes=200)
-    sc.pp.filter_genes(adata, min_cells=3)
-    adata.var['mt'] = adata.var_names.str.startswith('mt-')
-    sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
-    adata = adata[adata.obs.pct_counts_mt < 5, :]
-    if normalize: 
-        sc.pp.normalize_total(adata, target_sum=1e4)
-        sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, min_mean=0.00005, max_mean=7, min_disp=0.05)
-    adata = adata[:, adata.var.highly_variable]
-    return adata
-
-
-def plot_spatial(adata):
-    sns_plot = sns.scatterplot(x='x',y='y',data=adata.obs, hue='cell_type')
-    fig = sns_plot.get_figure()
-    fig.savefig("spatial_plot.pdf")
-    
-    
