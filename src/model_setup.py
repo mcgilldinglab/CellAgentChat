@@ -595,11 +595,12 @@ def get_target_genes(
         raise ValueError("n_shuffles must be at least 1")
 
     baseline_predictions, _ = perform_iteration(model, mat, C, nn.MSELoss(), batch=batch, device=device)
+    baseline_predictions = baseline_predictions.detach().cpu()
     receptor_names = list(rec_uni.keys())
     base_rng = np.random.default_rng(seed)
     for rec in tqdm(receptors, desc="Getting target genes", unit="receptor"):
         zeroed_values = np.zeros(N)
-        shuffled_predictions = []
+        perturbed_prediction_sum = None
         for _ in range(n_shuffles):
             perturbed_matrix = copy.deepcopy(mat).transpose()
             for receptor_idx, receptor_name in enumerate(receptor_names):
@@ -614,8 +615,12 @@ def get_target_genes(
             shuffled_prediction, _ = perform_iteration(
                 model, perturbed_matrix, C, nn.MSELoss(), batch=batch, device=device
             )
-            shuffled_predictions.append(shuffled_prediction)
-        mean_perturbed_prediction = torch.stack(shuffled_predictions).mean(dim=0)
+            shuffled_prediction = shuffled_prediction.detach().cpu()
+            if perturbed_prediction_sum is None:
+                perturbed_prediction_sum = shuffled_prediction
+            else:
+                perturbed_prediction_sum += shuffled_prediction
+        mean_perturbed_prediction = perturbed_prediction_sum / n_shuffles
         prediction_diff = abs(baseline_predictions - mean_perturbed_prediction).detach().cpu().numpy()
         mean_gene_diff = prediction_diff.mean(axis=0)
         top_gene_indices = np.argpartition(mean_gene_diff, -threshold)[-threshold:]
