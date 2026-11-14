@@ -1,21 +1,61 @@
-MIT License
+CellAgentChat — DUAL LICENSING NOTICE
 
-Copyright (c) 2023 McGill Ding Lab
+Copyright in project-authored code remains with its respective copyright holders.
+Existing source-level and third-party attribution notices are retained.
+See LICENSE-LEGACY.txt for prior licensing notices and the recorded baseline.
+Authorized licensor: The respective copyright holders or their authorized representatives;
+commercial inquiries are coordinated through McGill Ding Lab.
+Covered release: Project-authored code from the licensing-update commit dated 2026-11-14
+onward, subject to prior grants and separately identified file/component licenses.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The covered software is offered under either of the following licensing options,
+subject to the conditions of the applicable option.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. NONCOMMERCIAL LICENSE
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+The covered software is available under the unmodified PolyForm Noncommercial
+License 1.0.0, reproduced in LICENSE-NONCOMMERCIAL.txt:
+https://polyformproject.org/licenses/noncommercial/1.0.0
+
+Official plain text:
+https://polyformproject.org/licenses/noncommercial/1.0.0.txt
+
+The complete PolyForm terms, including their definitions of permitted purposes
+and organizations, govern this option. This notice does not narrow or expand
+those permissions. Preserve all applicable Required Notices.
+
+2. SEPARATE COMMERCIAL LICENSE
+
+For uses outside the permissions granted by Option 1, obtain a separate written
+commercial license from the authorized licensor before commencing those uses.
+The rights, permitted activities, fees, duration, support and other commercial
+terms are determined by the executed agreement. This notice itself does not
+grant those additional permissions.
+
+Commercial licensing inquiries: jun.ding@mcgill.ca
+
+3. PRE-EXISTING RIGHTS AND THIRD-PARTY MATERIAL
+
+This notice does not revoke rights validly granted under earlier licenses or
+change the licenses of third-party material. Preserve the applicable copyright
+and license notices for that material. Prior public releases remain subject to
+the licenses under which they were made available.
+
+Data, model weights and other non-code assets are covered only when expressly
+identified in the applicable licensing scope; otherwise consult their separate
+notices. No ownership transfer or exclusive commercial right is created by
+this notice.
+
+4. RIGHTS RETAINED BY COPYRIGHT HOLDERS
+
+To the extent of the rights they control, the copyright holders retain the
+right to use, modify, reproduce, distribute, commercialize and license the
+software under other terms. This notice governs permissions granted to
+recipients; it does not limit rights independently held by copyright owners
+or rights granted under a separate written agreement.
+
+5. NO IMPLIED ADDITIONAL GRANTS
+
+Any additional commercial permissions, including a right to grant sublicenses,
+must be granted by a party that has authority to grant them. This notice does
+not itself assign ownership or grant exclusivity to any person or entity.
